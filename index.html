@@ -12,7 +12,7 @@
 [hidden]{display:none!important}
 :root{
   --bg:#101012;--sf:#1a1a1f;--sf2:#242429;--bd:#2e2e36;
-  --tx:#e8e8ec;--tx2:#88889a;--ac:#f97316;--ac2:#fdba74;
+  --tx:#e8e8ec;--tx2:#8c8c9e;--ac:#f97316;--ac2:#fdba74;
   --grn:#34d399;--red:#f87171;--blu:#60a5fa;--pur:#c084fc;
   --mono:'IBM Plex Mono',monospace;--sans:'Outfit',system-ui,sans-serif;
 }
@@ -30,7 +30,7 @@ body{padding:10px 14px 20px;max-width:1280px;margin:0 auto}
 .url-wrap{flex:1;position:relative;display:flex;align-items:center}
 .url-in{width:100%;background:var(--sf);border:1px solid var(--bd);border-radius:8px;color:var(--tx);font-family:var(--mono);font-size:14px;padding:12px 34px 12px 12px;outline:none}
 .url-in:focus{border-color:var(--ac)}
-.url-in::placeholder{color:var(--tx2);opacity:.5}
+.url-in::placeholder{color:var(--tx2);opacity:1}
 .url-clear{position:absolute;right:6px;background:none;border:none;color:var(--tx2);font-size:16px;cursor:pointer;padding:4px 6px;border-radius:4px;line-height:1;display:none;-webkit-tap-highlight-color:transparent}
 .url-clear:hover{color:var(--red)}
 .url-clear.show{display:block}
@@ -127,7 +127,7 @@ body{padding:10px 14px 20px;max-width:1280px;margin:0 auto}
 .msg-err{background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.2);border-radius:8px;color:var(--red);padding:8px 12px;font-size:13px;margin-bottom:10px}
 .msg-info{background:rgba(96,165,250,.07);border:1px solid rgba(96,165,250,.2);border-radius:8px;color:var(--blu);padding:8px 12px;font-size:13px;margin-bottom:10px}
 .msg-warn{background:rgba(249,115,22,.07);border:1px solid rgba(249,115,22,.2);border-radius:8px;color:var(--ac2);padding:8px 12px;font-size:13px;margin-bottom:10px}
-.msg-debug{font-family:var(--mono);font-size:10px;color:var(--tx2);opacity:.6;margin-bottom:6px;min-height:12px}
+.msg-debug{display:none}
 .rst-bar{display:flex;align-items:center;gap:8px}
 .rst-bar span{flex:1}
 .mode-badge{display:inline-block;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:3px 8px;border-radius:4px;margin-left:8px}
@@ -139,10 +139,10 @@ body{padding:10px 14px 20px;max-width:1280px;margin:0 auto}
 .sec-form-row{display:flex;gap:6px;margin-bottom:6px}
 .sec-input{flex:1;background:var(--sf2);border:1px solid var(--bd);border-radius:6px;color:var(--tx);font-family:var(--mono);font-size:13px;padding:10px 9px;outline:none}
 .sec-input:focus{border-color:var(--ac)}
-.sec-input::placeholder{color:var(--tx2);opacity:.5}
+.sec-input::placeholder{color:var(--tx2);opacity:1}
 .sec-textarea{width:100%;background:var(--sf2);border:1px solid var(--bd);border-radius:6px;color:var(--tx);font-family:var(--mono);font-size:13px;padding:10px 9px;outline:none;resize:vertical;min-height:38px;max-height:80px}
 .sec-textarea:focus{border-color:var(--ac)}
-.sec-textarea::placeholder{color:var(--tx2);opacity:.5}
+.sec-textarea::placeholder{color:var(--tx2);opacity:1}
 .sec-select{background:var(--sf2);border:1px solid var(--bd);border-radius:6px;color:var(--tx);font-family:var(--mono);font-size:13px;padding:6px 8px;outline:none;cursor:pointer}
 .sec-select:focus{border-color:var(--ac)}
 
@@ -193,7 +193,7 @@ body{padding:10px 14px 20px;max-width:1280px;margin:0 auto}
 /* §13 BOOKMARKS */
 .bk-input{flex:1;background:var(--sf2);border:1px solid var(--bd);border-radius:6px;color:var(--tx);font-family:var(--mono);font-size:13px;padding:10px 9px;outline:none}
 .bk-input:focus{border-color:var(--ac)}
-.bk-input::placeholder{color:var(--tx2);opacity:.5}
+.bk-input::placeholder{color:var(--tx2);opacity:1}
 .bk-list{display:flex;flex-direction:column;gap:6px;max-height:320px;overflow-y:auto}
 .bk-folder-head{display:flex;align-items:center;gap:6px;padding:6px 8px;background:var(--sf2);border:1px solid var(--bd);border-radius:6px;user-select:none;transition:background .1s}
 .bk-folder-head:hover{background:#2e2e38}
@@ -262,8 +262,8 @@ body{padding:10px 14px 20px;max-width:1280px;margin:0 auto}
   .msg-err,.msg-info,.msg-warn{font-size:14px;padding:10px 14px}
 }
 /* Empty state */
-.empty-state{display:flex;align-items:center;justify-content:center;padding:14px 8px;opacity:.4}
-.empty-state-text{font-family:var(--mono);font-size:10px;color:var(--tx2);letter-spacing:.5px}
+.empty-state{display:flex;align-items:center;justify-content:center;padding:14px 8px}
+.empty-state-text{font-family:var(--mono);font-size:11px;color:var(--tx2);letter-spacing:.5px}
 
 
 </style>
@@ -274,10 +274,10 @@ body{padding:10px 14px 20px;max-width:1280px;margin:0 auto}
   <h1>🎸 Practice Player<span id="mode-badge" class="mode-badge none">—</span></h1>
 </div>
 
-<div id="msg-err" class="msg-err" style="display:none"></div>
-<div id="msg-info" class="msg-info" style="display:none"></div>
-<div id="msg-warn" class="msg-warn" style="display:none"></div>
-<div id="msg-debug" class="msg-debug"></div>
+<div id="msg-err" class="msg-err" role="alert" aria-live="assertive" aria-atomic="true" style="display:none"></div>
+<div id="msg-info" class="msg-info" role="status" aria-live="polite" aria-atomic="true" style="display:none"></div>
+<div id="msg-warn" class="msg-warn" role="status" aria-live="polite" aria-atomic="true" style="display:none"></div>
+<div id="msg-debug" class="msg-debug" aria-hidden="true"></div>
 
 <div id="rst-bar" class="msg-info" style="display:none">
   <div class="rst-bar">
@@ -305,7 +305,7 @@ body{padding:10px 14px 20px;max-width:1280px;margin:0 auto}
       <button type="button" class="panel-header" id="bk-panel-toggle" onclick="toggleBkPanel()" aria-expanded="true" aria-controls="bk-body">
         <span class="panel-arrow open" id="bk-arrow" aria-hidden="true">▶</span>
         <span style="font-family:var(--mono);font-size:12px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--tx)">★ ブックマーク</span>
-        <span style="font-family:var(--mono);font-size:9px;color:var(--tx2);opacity:.6;margin-left:auto" id="bk-count"></span>
+        <span style="font-family:var(--mono);font-size:10px;color:var(--tx2);margin-left:auto" id="bk-count"></span>
       </button>
       <div id="bk-body">
         <div class="bk-add-folder" style="margin:8px 0">
@@ -320,7 +320,7 @@ body{padding:10px 14px 20px;max-width:1280px;margin:0 auto}
       <button type="button" class="panel-header" id="hist-panel-toggle" onclick="toggleHistoryPanel()" aria-expanded="false" aria-controls="hist-body">
         <span class="panel-arrow" id="hist-arrow" aria-hidden="true">▶</span>
         <span style="font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--tx2)">履歴</span>
-        <span style="font-family:var(--mono);font-size:9px;color:var(--tx2);opacity:.6;margin-left:auto" id="hist-count"></span>
+        <span style="font-family:var(--mono);font-size:10px;color:var(--tx2);margin-left:auto" id="hist-count"></span>
       </button>
       <div id="hist-body" style="display:none">
         <div class="hl" id="hist-list"><div class="empty-state"><div class="empty-state-text">履歴なし</div></div></div>
@@ -485,15 +485,16 @@ var $abInfo=$('ab-info'),$abWarn=$('ab-warn'),$badge=$('mode-badge');
 var $seekFlags=$('seek-flags'),$flagA=$('flag-a'),$flagALabel=$('flag-a-label'),$flagB=$('flag-b'),$flagBLabel=$('flag-b-label');
 
 /* §4 MESSAGES */
+var infoTimer=null,warnTimer=null;
 function showError(m){$err.textContent=m;$err.style.display='block';}
-function clearError(){$err.style.display='none';}
-function showInfo(m){$info.textContent=m;$info.style.display='block';}
-function clearInfo(){$info.style.display='none';}
-function showWarn(m){$warn.textContent=m;$warn.style.display='block';}
-function clearWarn(){$warn.style.display='none';}
+function clearError(){$err.textContent='';$err.style.display='none';}
+function showInfo(m){clearTimeout(infoTimer);$info.textContent=m;$info.style.display='block';infoTimer=setTimeout(clearInfo,6000);}
+function clearInfo(){clearTimeout(infoTimer);infoTimer=null;$info.textContent='';$info.style.display='none';}
+function showWarn(m){clearTimeout(warnTimer);$warn.textContent=m;$warn.style.display='block';warnTimer=setTimeout(clearWarn,5000);}
+function clearWarn(){clearTimeout(warnTimer);warnTimer=null;$warn.textContent='';$warn.style.display='none';}
 function debugLog(m){console.log('[YTP]',m);$debug.textContent=m;}
 function clearAllMessages(){clearError();clearInfo();clearWarn();}
-function clearLoadMessages(){clearError();clearInfo();}
+function clearLoadMessages(){clearAllMessages();}
 
 /* §4b SELF-TESTS */
 (function(){
@@ -510,12 +511,12 @@ function clearLoadMessages(){clearError();clearInfo();}
   eq(getGlobalShortcut(Object.assign({},keyBase,{code:'Space',shiftKey:true})),null,'shortcut-shift');
   eq(getGlobalShortcut(Object.assign({},keyBase,{code:'KeyB',isComposing:true})),null,'shortcut-ime');
   eq(isRepeatableShortcut('forward'),true,'shortcut-repeat-seek');eq(isRepeatableShortcut('play'),false,'shortcut-repeat-play');
-  if(f.length){console.error('TESTS FAILED:',f);showError('Self-Test: '+f.join(', '));}
+  if(f.length){console.error('TESTS FAILED:',f);showError('アプリの初期化に失敗しました。ページを再読み込みしてください。');}
   else debugLog('Self-tests passed ✓');
 })();
 
 /* §5 MODE */
-function setMode(mode){controlMode=mode;debugLog('Mode → '+mode);$badge.textContent=mode==='api'?'API':mode==='iframe'?'簡易':'—';$badge.className='mode-badge '+mode;updateControlAvailability();}
+function setMode(mode){controlMode=mode;debugLog('Mode → '+mode);$badge.textContent=mode==='api'?'操作可':mode==='iframe'?'簡易':'—';$badge.className='mode-badge '+mode;updateControlAvailability();}
 function updateControlAvailability(){
   var isApi=controlMode==='api'&&playerReady;
   document.querySelectorAll('#transport .btn').forEach(function(b){b.disabled=!isApi;});
@@ -529,7 +530,7 @@ function updateControlAvailability(){
   $('btn-clear-ab').disabled=!isApi;
   updateSectionSaveButton();
   updateBookmarkSaveButton();
-  if(controlMode==='iframe'){showInfo('簡易モード: YouTube内蔵コントロールで操作してください');}else{clearInfo();}
+  if(controlMode==='iframe'){showInfo('この動画は簡易再生です。再生操作は動画内のボタンを使ってください。');}else{clearInfo();}
 }
 
 /* §6 SPEED */
@@ -578,8 +579,8 @@ function clearUrlInput(){$urlIn.value='';$urlIn.focus();updateUrlClearBtn();}
 function updateUrlClearBtn(){$('url-clear').classList.toggle('show',$urlIn.value.length>0);}
 
 function loadVideoByUrl(url){
-  var id=extractVideoId(url);if(!id){showError('有効なYouTube URLを入力してください');return;}
-  clearLoadMessages();$urlIn.value=url;updateUrlClearBtn();currentUrl=url;currentVideoId=id;
+  clearLoadMessages();var id=extractVideoId(url);if(!id){showError('有効なYouTube URLを入力してください');return;}
+  $urlIn.value=url;updateUrlClearBtn();currentUrl=url;currentVideoId=id;
   resetPlaybackState();resetLoopState();
   editingSectionId=null; // v3fix: 動画切替時に編集状態をクリア
   $ph.style.display='none';$title.style.display='none';
@@ -597,7 +598,7 @@ function createPlayerAPI(id){
 }
 function onPlayerReady(e){player=e.target;playerReady=true;clearError();setMode('api');try{duration=player.getDuration()||0;$tDur.textContent=fmt(duration);}catch(e){}try{player.setPlaybackRate(speed);}catch(e){}tryGetTitle();startTick();saveSession();debugLog('Player ready ✓');}
 function onPlayerStateChange(e){if(controlMode!=='api')return;isPlaying=(e.data===YT.PlayerState.PLAYING);$btnPlay.textContent=isPlaying?'⏸':'▶';$btnPlay.setAttribute('aria-label',isPlaying?'一時停止':'再生');$btnPlay.classList.toggle('btn-a',!isPlaying);if(e.data===YT.PlayerState.PLAYING){try{var d=player.getDuration();if(d&&d!==duration){duration=d;$tDur.textContent=fmt(d);}}catch(e){}tryGetTitle();}}
-function onPlayerError(e){var c=e.data;debugLog('API error '+c);if(c===101||c===150||c===153){createPlayerIframe(currentVideoId);}else if(c===100){cleanupAfterFatalError();showError('動画が見つかりません');}else if(c===2){cleanupAfterFatalError();showError('パラメータ不正');}else{createPlayerIframe(currentVideoId);}}
+function onPlayerError(e){var c=e.data;debugLog('API error '+c);if(c===101||c===150||c===153){createPlayerIframe(currentVideoId);}else if(c===100){cleanupAfterFatalError();showError('動画が見つかりません');}else if(c===2){cleanupAfterFatalError();showError('このYouTube URLは読み込めませんでした');}else{createPlayerIframe(currentVideoId);}}
 function cleanupAfterFatalError(){destroyPlayer(true);setMode('none');$ph.style.display='flex';$title.style.display='none';resetPlaybackState();}
 function createPlayerIframe(id){destroyPlayer(true);var wrap=$('embed-wrap'),iframe=document.createElement('iframe');iframe.id='player-target';iframe.style.cssText='position:absolute;top:0;left:0;width:100%;height:100%;border:none;';iframe.setAttribute('allow','autoplay; encrypted-media; picture-in-picture');iframe.setAttribute('allowfullscreen','true');iframe.src='https://www.youtube.com/embed/'+id+'?autoplay=1&controls=1&rel=0&modestbranding=1&playsinline=1';wrap.appendChild(iframe);player=null;playerReady=false;setMode('iframe');saveSession();}
 function destroyPlayer(keepMode){stopTick();if(player){try{player.destroy();}catch(e){}}player=null;playerReady=false;var old=$('player-target');if(old)old.remove();$('embed-wrap').querySelectorAll('iframe').forEach(function(f){f.remove();});if(!keepMode)setMode('none');}
@@ -756,7 +757,7 @@ function loadSessionValue(key,fb){try{var v=localStorage.getItem(key);return v!=
 
 /* §16 RESTORE */
 function hideRestore(){$('rst-bar').style.display='none';}
-function doRestore(){hideRestore();var vid=loadSessionValue('ytp_vid',null),url=loadSessionValue('ytp_url','');if(!vid){showError('復元データなし');return;}speed=loadSessionValue('ytp_spd',1);changeSpeed(speed);$urlIn.value=url;loadVideoByUrl(url||vid);var savedA=loadSessionValue('ytp_a',null),savedB=loadSessionValue('ytp_b',null),savedLoop=loadSessionValue('ytp_loop',false),savedPos=loadSessionValue('ytp_pos',0);var att=0;var ri=setInterval(function(){att++;if(att>40){clearInterval(ri);return;}if(controlMode==='api'&&playerReady&&player){if(savedPos>0){try{player.seekTo(savedPos,true);currentTime=savedPos;updateSeekbar();}catch(e){}}try{player.setPlaybackRate(speed);}catch(e){}if(savedA!=null)pointA=savedA;if(savedB!=null)pointB=savedB;if(savedLoop&&canEnableLoop())loopActive=true;updateABUI();debugLog('復元完了 ✓');clearInterval(ri);}else if(controlMode==='iframe'){showInfo('簡易モード: 復元制限あり');clearInterval(ri);}},300);}
+function doRestore(){hideRestore();var vid=loadSessionValue('ytp_vid',null),url=loadSessionValue('ytp_url','');if(!vid){showError('復元できるデータがありません');return;}speed=loadSessionValue('ytp_spd',1);changeSpeed(speed);$urlIn.value=url;loadVideoByUrl(url||vid);var savedA=loadSessionValue('ytp_a',null),savedB=loadSessionValue('ytp_b',null),savedLoop=loadSessionValue('ytp_loop',false),savedPos=loadSessionValue('ytp_pos',0);var att=0;var ri=setInterval(function(){att++;if(att>40){clearInterval(ri);return;}if(controlMode==='api'&&playerReady&&player){if(savedPos>0){try{player.seekTo(savedPos,true);currentTime=savedPos;updateSeekbar();}catch(e){}}try{player.setPlaybackRate(speed);}catch(e){}if(savedA!=null)pointA=savedA;if(savedB!=null)pointB=savedB;if(savedLoop&&canEnableLoop())loopActive=true;updateABUI();debugLog('復元完了 ✓');clearInterval(ri);}else if(controlMode==='iframe'){showInfo('簡易再生では、再生位置や速度を復元できません。');clearInterval(ri);}},300);}
 
 /* ============================================================
    §17  SAVED SECTIONS (v3: speedPreset + status + edit)
@@ -847,7 +848,7 @@ function saveSection(){
   if(!canEnableLoop()||!currentVideoId)return;
   var spdVal=$('sec-speed-preset').value;
   var parsedSpd=spdVal?parseFloat(spdVal):null;
-  if(isDuplicateSection(pointA,pointB,parsedSpd)){showWarn('⚠ 同じ区間・同じ速度で保存済みです');return;}
+  if(isDuplicateSection(pointA,pointB,parsedSpd)){showWarn('同じ区間と速度で保存済みです');return;}clearWarn();
   var label=$('sec-label').value.trim();
   var note=$('sec-note').value.trim();
   if(!label)label=fmt(pointA)+' → '+fmt(pointB);
@@ -1059,7 +1060,7 @@ function quickBookmark(){
     var bMatch=(b.pointB==null&&pointB==null)||(b.pointB!=null&&pointB!=null&&Math.abs(b.pointB-pointB)<BK_POS_TOL);
     return aMatch&&bMatch;
   });
-  if(isDupe){showInfo('同じ状態のブックマークがあります');return;}
+  if(isDupe){showInfo('同じ状態のブックマークがあります');return;}clearInfo();
   var name='';var t=$title.textContent;if(t)name=t.replace('🎵 ','');if(!name)name=currentUrl||currentVideoId;
   bookmarkData.items.unshift({id:generateId(),folderId:null,videoId:currentVideoId,url:currentUrl,title:name,speed:speed,pointA:pointA,pointB:pointB,loopActive:loopActive,note:'',createdAt:Date.now()});
   saveBookmarksStore();renderBookmarks();updateBookmarkSaveButton();debugLog('★ BK追加: '+name);
@@ -1067,7 +1068,7 @@ function quickBookmark(){
 function loadBookmark(bk){$urlIn.value=bk.url;loadVideoByUrl(bk.url);var att=0;var ri=setInterval(function(){att++;if(att>40){clearInterval(ri);return;}if(controlMode==='api'&&playerReady&&player){if(bk.speed!=null)changeSpeed(bk.speed,{skipSave:true});if(bk.pointA!=null)pointA=bk.pointA;if(bk.pointB!=null)pointB=bk.pointB;if(bk.loopActive&&canEnableLoop())loopActive=true;updateABUI();if(bk.pointA!=null){try{player.seekTo(bk.pointA,true);currentTime=bk.pointA;updateSeekbar();}catch(e){}}saveSession();clearInterval(ri);}else if(controlMode==='iframe'){clearInterval(ri);}},300);}
 function deleteBookmark(id){bookmarkData.items=bookmarkData.items.filter(function(b){return b.id!==id;});saveBookmarksStore();renderBookmarks();updateBookmarkSaveButton();}
 function moveBookmarkToFolder(bkId,fid){bookmarkData.items.forEach(function(b){if(b.id===bkId)b.folderId=fid||null;});saveBookmarksStore();renderBookmarks();}
-function addBookmarkFolder(){var name=$('bk-new-folder').value.trim();if(!name)return;if(bookmarkData.folders.some(function(f){return f.name===name;})){showWarn('同名フォルダあり');return;}bookmarkData.folders.push({id:generateId(),name:name});saveBookmarksStore();renderBookmarks();$('bk-new-folder').value='';}
+function addBookmarkFolder(){var name=$('bk-new-folder').value.trim();if(!name)return;if(bookmarkData.folders.some(function(f){return f.name===name;})){showWarn('同じ名前のフォルダがあります');return;}clearWarn();bookmarkData.folders.push({id:generateId(),name:name});saveBookmarksStore();renderBookmarks();$('bk-new-folder').value='';}
 function deleteBookmarkFolder(fid){bookmarkData.items.forEach(function(b){if(b.folderId===fid)b.folderId=null;});bookmarkData.folders=bookmarkData.folders.filter(function(f){return f.id!==fid;});delete openFolders[fid];saveBookmarksStore();renderBookmarks();}
 function toggleBookmarkFolder(fid){openFolders[fid]=!openFolders[fid];renderBookmarks();}
 function createFolderMoveSelect(bk){var sel=document.createElement('select');sel.className='bk-item-move';sel.setAttribute('aria-label','移動先フォルダ: '+bk.title);var o0=document.createElement('option');o0.value='';o0.textContent='未分類';sel.appendChild(o0);bookmarkData.folders.forEach(function(f){var o=document.createElement('option');o.value=f.id;o.textContent=f.name;sel.appendChild(o);});sel.value=bk.folderId||'';sel.onchange=function(){moveBookmarkToFolder(bk.id,sel.value);};return sel;}
