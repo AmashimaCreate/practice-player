@@ -3,7 +3,29 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>🎸 Practice Player v3</title>
+<title>Practice Player | YouTube区間練習ツール</title>
+<meta name="description" content="YouTube動画のA-B区間リピート、再生速度調整、ブックマーク、練習区間の保存に対応したギター練習用プレーヤー。">
+<meta name="theme-color" content="#101012">
+<meta name="color-scheme" content="dark">
+<meta name="application-name" content="Practice Player">
+<link rel="canonical" href="https://amashimacreate.github.io/practice-player/">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="ja_JP">
+<meta property="og:site_name" content="Practice Player">
+<meta property="og:title" content="Practice Player | YouTube区間練習ツール">
+<meta property="og:description" content="YouTube動画のA-B区間リピート、再生速度調整、ブックマーク、練習区間の保存に対応したギター練習用プレーヤー。">
+<meta property="og:url" content="https://amashimacreate.github.io/practice-player/">
+<meta property="og:image" content="https://amashimacreate.github.io/practice-player/og-image.jpg">
+<meta property="og:image:type" content="image/jpeg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Practice Playerの操作画面">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Practice Player | YouTube区間練習ツール">
+<meta name="twitter:description" content="YouTube動画の区間リピート、速度調整、ブックマーク、練習区間の保存に対応。">
+<meta name="twitter:image" content="https://amashimacreate.github.io/practice-player/og-image.jpg">
+<meta name="twitter:image:alt" content="Practice Playerの操作画面">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600;700&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
@@ -131,9 +153,7 @@ body{padding:10px 14px 20px;max-width:1280px;margin:0 auto}
 .rst-bar{display:flex;align-items:center;gap:8px}
 .rst-bar span{flex:1}
 .mode-badge{display:inline-block;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:3px 8px;border-radius:4px;margin-left:8px}
-.mode-badge.api{background:rgba(52,211,153,.15);color:var(--grn);border:1px solid rgba(52,211,153,.3)}
 .mode-badge.iframe{background:rgba(249,115,22,.1);color:var(--ac2);border:1px solid rgba(249,115,22,.25)}
-.mode-badge.none{background:var(--sf2);color:var(--tx2);border:1px solid var(--bd)}
 
 /* §12 SECTIONS */
 .sec-form-row{display:flex;gap:6px;margin-bottom:6px}
@@ -271,7 +291,7 @@ body{padding:10px 14px 20px;max-width:1280px;margin:0 auto}
 <body>
 
 <div class="hdr">
-  <h1>🎸 Practice Player<span id="mode-badge" class="mode-badge none">—</span></h1>
+  <h1>🎸 Practice Player<span id="mode-badge" class="mode-badge" hidden></span></h1>
 </div>
 
 <div id="msg-err" class="msg-err" role="alert" aria-live="assertive" aria-atomic="true" style="display:none"></div>
@@ -516,7 +536,7 @@ function clearLoadMessages(){clearAllMessages();}
 })();
 
 /* §5 MODE */
-function setMode(mode){controlMode=mode;debugLog('Mode → '+mode);$badge.textContent=mode==='api'?'操作可':mode==='iframe'?'簡易':'—';$badge.className='mode-badge '+mode;updateControlAvailability();}
+function setMode(mode){controlMode=mode;debugLog('Mode → '+mode);var simple=mode==='iframe';$badge.hidden=!simple;$badge.textContent=simple?'簡易再生':'';$badge.className='mode-badge'+(simple?' iframe':'');updateControlAvailability();}
 function updateControlAvailability(){
   var isApi=controlMode==='api'&&playerReady;
   document.querySelectorAll('#transport .btn').forEach(function(b){b.disabled=!isApi;});
