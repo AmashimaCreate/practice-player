@@ -329,7 +329,7 @@ body{padding:10px 14px 20px;max-width:1280px;margin:0 auto}
         <div id="embed-ph" class="embed-ph"><b>▶</b><span>URLを貼り付けて再生</span></div>
       </div>
       <div id="vid-title" class="vid-title" style="display:none"></div>
-      <div class="seek-w disabled" id="seek-w" role="slider" tabindex="-1" aria-label="再生位置" aria-disabled="true" aria-valuemin="0" aria-valuemax="0" aria-valuenow="0" aria-valuetext="0:00 / 0:00">
+      <div class="seek-w disabled" id="seek-w" role="slider" tabindex="-1" aria-label="再生位置" aria-keyshortcuts="ArrowLeft ArrowRight Home End" aria-disabled="true" aria-valuemin="0" aria-valuemax="0" aria-valuenow="0" aria-valuetext="0:00 / 0:00">
         <div class="seek-t" id="seek-t">
           <div class="seek-f" id="seek-f"></div>
           <div class="seek-ab" id="seek-ab" style="display:none"></div>
@@ -347,7 +347,7 @@ body{padding:10px 14px 20px;max-width:1280px;margin:0 auto}
         <button type="button" class="btn btn-s" disabled onclick="seekBy(-10)" style="flex:1">-10</button>
         <button type="button" class="btn btn-s" disabled onclick="seekBy(-5)" style="flex:1">-5</button>
         <button type="button" class="btn btn-s" disabled onclick="seekBy(-2)" style="flex:1">-2</button>
-        <button type="button" class="btn btn-a" disabled onclick="togglePlay()" id="btn-play" aria-label="再生" style="flex:1;min-width:50px">▶</button>
+        <button type="button" class="btn btn-a" disabled onclick="togglePlay()" id="btn-play" aria-label="再生" aria-keyshortcuts="Space" title="再生 / 一時停止（Space）" style="flex:1;min-width:50px">▶</button>
         <button type="button" class="btn btn-s" disabled onclick="seekBy(2)" style="flex:1">+2</button>
         <button type="button" class="btn btn-s" disabled onclick="seekBy(5)" style="flex:1">+5</button>
         <button type="button" class="btn btn-s" disabled onclick="seekBy(10)" style="flex:1">+10</button>
@@ -360,9 +360,9 @@ body{padding:10px 14px 20px;max-width:1280px;margin:0 auto}
     <div class="card" id="card-ab">
       <div class="card-t">A-B ループ</div>
       <div class="row rowc">
-        <button type="button" class="btn btn-s" disabled id="btn-a" onclick="setPointA()">A: —</button>
-        <button type="button" class="btn btn-s" disabled id="btn-b" onclick="setPointB()">B: —</button>
-        <button type="button" class="btn btn-s" disabled id="btn-loop" onclick="toggleLoop()" aria-pressed="false">LOOP</button>
+        <button type="button" class="btn btn-s" disabled id="btn-a" onclick="setPointA()" aria-keyshortcuts="A" title="A点を設定（A）">A: —</button>
+        <button type="button" class="btn btn-s" disabled id="btn-b" onclick="setPointB()" aria-keyshortcuts="B" title="B点を設定（B）">B: —</button>
+        <button type="button" class="btn btn-s" disabled id="btn-loop" onclick="toggleLoop()" aria-keyshortcuts="L" aria-pressed="false" title="ループ切替（L）">LOOP</button>
         <button type="button" class="btn btn-s" disabled id="btn-clear-ab" onclick="clearAB()">クリア</button>
       </div>
       <div class="ab-info" id="ab-info" style="display:none"></div>
@@ -491,6 +491,12 @@ function clearLoadMessages(){clearError();clearInfo();}
   eq(extractVideoId('https://youtu.be/dQw4w9WgXcQ'),'dQw4w9WgXcQ','short');
   eq(extractVideoId('not-a-url'),null,'invalid');
   eq(fmt(0),'0:00','f0');eq(fmt(65),'1:05','f65');
+  var keyBase={defaultPrevented:false,isComposing:false,keyCode:0,metaKey:false,ctrlKey:false,altKey:false,shiftKey:false,target:null};
+  eq(getGlobalShortcut(Object.assign({},keyBase,{code:'KeyA'})),'a','shortcut-a');
+  eq(getGlobalShortcut(Object.assign({},keyBase,{code:'KeyA',metaKey:true})),null,'shortcut-meta');
+  eq(getGlobalShortcut(Object.assign({},keyBase,{code:'Space',shiftKey:true})),null,'shortcut-shift');
+  eq(getGlobalShortcut(Object.assign({},keyBase,{code:'KeyB',isComposing:true})),null,'shortcut-ime');
+  eq(isRepeatableShortcut('forward'),true,'shortcut-repeat-seek');eq(isRepeatableShortcut('play'),false,'shortcut-repeat-play');
   if(f.length){console.error('TESTS FAILED:',f);showError('Self-Test: '+f.join(', '));}
   else debugLog('Self-tests passed ✓');
 })();
@@ -1078,8 +1084,23 @@ function renderBookmarks(){
 renderBookmarks();
 
 /* §18 KEYBOARD */
-function isInteractiveKeyTarget(el){return !!(el&&el.closest&&el.closest('input,textarea,select,button,a,[role="slider"],[contenteditable="true"]'));}
-document.addEventListener('keydown',function(e){if(isInteractiveKeyTarget(e.target))return;if(controlMode!=='api'||!playerReady)return;switch(e.code){case'Space':e.preventDefault();togglePlay();break;case'ArrowLeft':e.preventDefault();seekBy(-5);break;case'ArrowRight':e.preventDefault();seekBy(5);break;case'KeyA':setPointA();break;case'KeyB':setPointB();break;case'KeyL':toggleLoop();break;}});
+function isTextEntryKeyTarget(el){return !!(el&&el.closest&&el.closest('input,textarea,select,[contenteditable="true"]'));}
+function targetOwnsShortcut(el,code){
+  if(!el||!el.closest)return false;
+  var control=el.closest('button,a,[role="button"],[role="slider"]');
+  return !!(control&&(control.getAttribute('role')==='slider'||code==='Space'));
+}
+function getGlobalShortcut(e){
+  if(e.defaultPrevented||e.isComposing||e.keyCode===229||e.metaKey||e.ctrlKey||e.altKey||e.shiftKey||isTextEntryKeyTarget(e.target)||targetOwnsShortcut(e.target,e.code))return null;
+  switch(e.code){case'Space':return'play';case'ArrowLeft':return'back';case'ArrowRight':return'forward';case'KeyA':return'a';case'KeyB':return'b';case'KeyL':return'loop';default:return null;}
+}
+function isRepeatableShortcut(action){return action==='back'||action==='forward';}
+document.addEventListener('keydown',function(e){
+  var action=getGlobalShortcut(e);if(!action||controlMode!=='api'||!playerReady)return;
+  if(e.repeat&&!isRepeatableShortcut(action))return;
+  e.preventDefault();
+  switch(action){case'play':togglePlay();break;case'back':seekBy(-5);break;case'forward':seekBy(5);break;case'a':setPointA();break;case'b':setPointB();break;case'loop':toggleLoop();break;}
+});
 $urlIn.addEventListener('keydown',function(e){if(e.key==='Enter')handleLoadClick();});
 $urlIn.addEventListener('input',updateUrlClearBtn);
 
