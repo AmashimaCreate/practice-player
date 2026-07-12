@@ -147,12 +147,18 @@ body{padding:10px 14px 20px;max-width:1280px;margin:0 auto}
 .sec-select:focus{border-color:var(--ac)}
 
 /* Section speed nudge buttons */
-.sec-spd-bar{display:flex;align-items:center;gap:3px;margin:6px 0}
+.sec-spd-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:8px}
+.sec-spd-label{font-family:var(--mono);font-size:11px;font-weight:600;color:var(--tx2)}
+.sec-spd-actions{display:flex;gap:4px}
+.sec-spd-mode-btn{background:var(--sf2);border:1px solid var(--bd);border-radius:5px;color:var(--tx2);font-family:var(--sans);font-size:10px;font-weight:600;padding:5px 7px;cursor:pointer;transition:all .1s}
+.sec-spd-mode-btn:hover{border-color:var(--ac);color:var(--tx)}
+.sec-spd-mode-btn.on{border-color:var(--ac);color:var(--ac);background:rgba(249,115,22,.08)}
+.sec-spd-bar{display:flex;align-items:center;gap:3px;margin:5px 0 6px}
 .sec-spd-nudge{background:var(--sf2);border:1px solid var(--bd);border-radius:5px;color:var(--tx2);font-family:var(--mono);font-size:11px;font-weight:600;padding:7px 8px;cursor:pointer;transition:all .1s;-webkit-tap-highlight-color:transparent;user-select:none}
-.sec-spd-nudge:hover{border-color:var(--ac);color:var(--tx)}
-.sec-spd-nudge:active{transform:scale(.95)}
-.sec-spd-display{flex:1;min-height:32px;background:none;border:0;text-align:center;font-family:var(--mono);font-size:15px;font-weight:700;color:var(--ac);cursor:pointer;user-select:none;border-radius:4px;transition:background .1s}
-.sec-spd-display:hover{background:rgba(249,115,22,.1)}
+.sec-spd-nudge:hover:not(:disabled){border-color:var(--ac);color:var(--tx)}
+.sec-spd-nudge:active:not(:disabled){transform:scale(.95)}
+.sec-spd-nudge:disabled{opacity:.3;cursor:not-allowed}
+.sec-spd-display{display:block;flex:1;min-height:32px;line-height:32px;text-align:center;font-family:var(--mono);font-size:15px;font-weight:700;color:var(--ac);user-select:none}
 .sec-spd-display.none{color:var(--tx2);font-weight:400;font-size:13px}
 
 .sec-list{display:flex;flex-direction:column;gap:4px;max-height:280px;overflow-y:auto}
@@ -374,12 +380,19 @@ body{padding:10px 14px 20px;max-width:1280px;margin:0 auto}
       <div class="card-t">区間を保存</div>
       <input type="text" class="sec-input" id="sec-label" placeholder="区間名（例: イントロ）" maxlength="40" style="width:100%;margin-bottom:6px">
       <textarea class="sec-textarea" id="sec-note" placeholder="メモ（任意）" maxlength="200" rows="1"></textarea>
-      <div class="sec-spd-bar">
-        <button type="button" class="sec-spd-nudge" onclick="secSpdNudge(-0.1)">−.1</button>
-        <button type="button" class="sec-spd-nudge" onclick="secSpdNudge(-0.05)">−.05</button>
-        <button type="button" class="sec-spd-display" id="sec-spd-display" onclick="secSpdSetCurrent()" title="現在速度をセット" aria-label="保存時の速度を現在の再生速度に設定">1x</button>
-        <button type="button" class="sec-spd-nudge" onclick="secSpdNudge(0.05)">+.05</button>
-        <button type="button" class="sec-spd-nudge" onclick="secSpdNudge(0.1)">+.1</button>
+      <div class="sec-spd-head">
+        <span class="sec-spd-label" id="sec-spd-label">読み込み時の速度</span>
+        <div class="sec-spd-actions" role="group" aria-labelledby="sec-spd-label">
+          <button type="button" class="sec-spd-mode-btn" id="sec-spd-current" onclick="secSpdSetCurrent()" title="現在の再生速度を使用">現在速度</button>
+          <button type="button" class="sec-spd-mode-btn" id="sec-spd-none" onclick="secSpdSetNone()" aria-pressed="false">指定なし</button>
+        </div>
+      </div>
+      <div class="sec-spd-bar" id="sec-spd-controls">
+        <button type="button" class="sec-spd-nudge" onclick="secSpdNudge(-0.1)" aria-label="読み込み時の速度を0.1下げる">−.1</button>
+        <button type="button" class="sec-spd-nudge" onclick="secSpdNudge(-0.05)" aria-label="読み込み時の速度を0.05下げる">−.05</button>
+        <output class="sec-spd-display" id="sec-spd-display" aria-live="polite">1x</output>
+        <button type="button" class="sec-spd-nudge" onclick="secSpdNudge(0.05)" aria-label="読み込み時の速度を0.05上げる">+.05</button>
+        <button type="button" class="sec-spd-nudge" onclick="secSpdNudge(0.1)" aria-label="読み込み時の速度を0.1上げる">+.1</button>
       </div>
       <input type="hidden" id="sec-speed-preset" value="">
       <div style="display:flex;justify-content:center;margin-top:6px">
@@ -535,7 +548,7 @@ function updateSpeedButtons(){
   var disp=$('speed-display');if(disp)disp.textContent=speed+'x';
 }
 function changeSpeed(s,opts){
-  s=Math.round(Math.max(0.05,Math.min(4,s))*100)/100;speed=s;updateSpeedButtons();
+  s=Math.round(Math.max(0.05,Math.min(4,s))*100)/100;speed=s;updateSpeedButtons();updateSecSpdCurrentLabel();
   if(controlMode==='api'&&player&&playerReady){try{player.setPlaybackRate(s);}catch(e){}}
   if(!(opts&&opts.skipSave))saveSession();
   updateBookmarkSaveButton();
@@ -760,19 +773,24 @@ function saveSectionsStore(){try{localStorage.setItem('ytp_sections',JSON.string
 var secSpdValue=null; // null=なし, number=指定あり
 
 function updateSecSpdDisplay(){
-  var disp=$('sec-spd-display');
-  if(secSpdValue==null){
-    disp.textContent='なし';
-    disp.setAttribute('aria-label','保存時の速度: なし。押すと現在の再生速度を設定');
+  var disp=$('sec-spd-display'),hasPreset=secSpdValue!=null;
+  if(!hasPreset){
+    disp.textContent='—';
+    disp.setAttribute('aria-label','読み込み時の速度: 指定なし');
     disp.classList.add('none');
     $('sec-speed-preset').value='';
   }else{
     disp.textContent=secSpdValue+'x';
-    disp.setAttribute('aria-label','保存時の速度: '+secSpdValue+'倍。押すと現在の再生速度を設定');
+    disp.setAttribute('aria-label','読み込み時の速度: '+secSpdValue+'倍');
     disp.classList.remove('none');
     $('sec-speed-preset').value=String(secSpdValue);
   }
+  document.querySelectorAll('#sec-spd-controls .sec-spd-nudge').forEach(function(btn){btn.disabled=!hasPreset;});
+  $('sec-spd-none').classList.toggle('on',!hasPreset);$('sec-spd-none').setAttribute('aria-pressed',String(!hasPreset));
+  updateSecSpdCurrentLabel();
 }
+
+function updateSecSpdCurrentLabel(){var btn=$('sec-spd-current');if(btn)btn.setAttribute('aria-label','現在の再生速度 '+speed+'倍を使用');}
 
 function secSpdNudge(delta){
   // なし状態からnudgeしたら現在速度を起点にする
@@ -849,12 +867,12 @@ function saveSection(){
   debugLog('区間保存: '+label);
 }
 
-/** 区間読込 — 状態適用順: A/B → speed(save抑制) → loop → UI → seek → saveSession */
+/** 区間読込 — 状態適用順: A/B → 指定速度 → loop → UI → seek → saveSession */
 function loadSection(sec){
   // 1. A/B設定
   pointA=sec.pointA;pointB=sec.pointB;
-  // 2. 速度適用（saveSession抑制 — 最終状態確定後にまとめて保存）
-  changeSpeed(sec.speedPreset!=null?sec.speedPreset:1,{skipSave:true});
+  // 2. 速度指定がある場合だけ適用。指定なしは現在速度を維持する
+  if(sec.speedPreset!=null)changeSpeed(sec.speedPreset,{skipSave:true});
   // 3. ループ判定
   var secValid=sec.pointA!=null&&sec.pointB!=null&&sec.pointB>sec.pointA&&sec.pointB-sec.pointA>=AB_MIN_INTERVAL;
   loopActive=secValid;
@@ -946,8 +964,9 @@ function renderSections(){
     badge.onclick=function(e){e.stopPropagation();cycleSectionStatus(s.id);};
     top.appendChild(badge);
 
+    var speedDesc=s.speedPreset!=null?s.speedPreset+'倍へ変更':'速度は変更しない';
     var loadBtn=document.createElement('button');loadBtn.type='button';loadBtn.className='sec-item-load';loadBtn.disabled=isEditing;
-    loadBtn.setAttribute('aria-label','区間を読み込む: '+s.label+'、'+fmt(s.pointA)+'から'+fmt(s.pointB));
+    loadBtn.setAttribute('aria-label','区間を読み込む: '+s.label+'、'+fmt(s.pointA)+'から'+fmt(s.pointB)+'、'+speedDesc);
     loadBtn.onclick=function(e){e.stopPropagation();loadSection(s);};
     var lbl=document.createElement('div');lbl.className='sec-item-label';lbl.textContent=s.label;
     loadBtn.appendChild(lbl);
@@ -969,9 +988,9 @@ function renderSections(){
     item.appendChild(top);
 
     // --- Meta: speed ---
-    if(s.speedPreset!=null&&!isEditing){
+    if(!isEditing){
       var meta=document.createElement('div');meta.className='sec-item-meta';
-      meta.textContent='速度: '+s.speedPreset+'x';item.appendChild(meta);
+      meta.textContent=s.speedPreset!=null?'読み込み時: '+s.speedPreset+'x':'読み込み時: 速度を変更しない';item.appendChild(meta);
     }
 
     // --- Note ---
@@ -988,7 +1007,7 @@ function renderSections(){
       var eLbl=document.createElement('input');eLbl.type='text';eLbl.className='sec-edit-input';eLbl.id='edit-label-'+s.id;eLbl.value=s.label;eLbl.placeholder='区間名';eLbl.maxLength=40;
       // v3fix: 編集の速度選択肢 — 0.25〜2.00の0.05刻み
       var eSpd=document.createElement('select');eSpd.className='sec-edit-select';eSpd.id='edit-speed-'+s.id;
-      var eSpdOpt=document.createElement('option');eSpdOpt.value='';eSpdOpt.textContent='なし';eSpd.appendChild(eSpdOpt);
+      var eSpdOpt=document.createElement('option');eSpdOpt.value='';eSpdOpt.textContent='速度を変更しない';eSpd.appendChild(eSpdOpt);
       for(var sv=0.25;sv<=2.005;sv+=0.05){var rv=Math.round(sv*100)/100;var eo=document.createElement('option');eo.value=String(rv);eo.textContent=rv+'x';eSpd.appendChild(eo);}
       eSpd.value=s.speedPreset!=null?String(s.speedPreset):'';
       r1.appendChild(eLbl);r1.appendChild(eSpd);form.appendChild(r1);
