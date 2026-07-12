@@ -211,6 +211,9 @@ body{padding:10px 14px 20px;max-width:1280px;margin:0 auto}
 @media(max-width:768px){
   body{padding:8px 10px 16px}
   .grid>*,.stack,.card,.panel-card,.url-wrap,.url-in{min-width:0}
+  .player-column{order:1}
+  .practice-column{order:2}
+  .library-column{order:3}
   #transport{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px!important}
   #transport .btn{min-width:0!important;min-height:44px;padding:10px 0;font-size:13px}
   #speed-row{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:3px}
@@ -281,7 +284,7 @@ body{padding:10px 14px 20px;max-width:1280px;margin:0 auto}
 <div class="grid">
 
   <!-- LEFT -->
-  <div class="stack col-scroll">
+  <div class="stack col-scroll library-column">
     <!-- Bookmark: 折りたたみ可（デフォルト開） -->
     <div class="panel-card" id="card-bk">
       <div class="panel-header" onclick="toggleBkPanel()">
@@ -311,7 +314,7 @@ body{padding:10px 14px 20px;max-width:1280px;margin:0 auto}
   </div>
 
   <!-- CENTER -->
-  <div>
+  <div class="player-column">
     <div class="card">
       <div id="embed-wrap">
         <div id="embed-ph" class="embed-ph"><b>▶</b><span>URLを貼り付けて再生</span></div>
@@ -344,7 +347,7 @@ body{padding:10px 14px 20px;max-width:1280px;margin:0 auto}
   </div>
 
   <!-- RIGHT -->
-  <div class="stack col-scroll">
+  <div class="stack col-scroll practice-column">
     <div class="card" id="card-ab">
       <div class="card-t">A-B ループ</div>
       <div class="row rowc">
