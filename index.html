@@ -143,6 +143,10 @@ body{padding:10px 14px 20px;max-width:1280px;margin:0 auto}
 /* §9 TAP BPM */
 .tap-btn{width:100%;min-height:66px;font-size:22px;font-weight:700;font-family:var(--mono);border-radius:10px;background:var(--sf2);border:2px solid var(--bd);color:var(--tx);cursor:pointer;transition:all .08s;user-select:none;-webkit-tap-highlight-color:transparent}
 .tap-btn:active{background:var(--ac);border-color:var(--ac);color:#fff;transform:scale(.97)}
+.metronome-link{display:flex;align-items:center;justify-content:center;width:100%;min-height:46px;margin-top:10px;border:1px solid var(--ac);border-radius:8px;background:rgba(249,115,22,.08);color:var(--ac);font-size:14px;font-weight:700;text-decoration:none;transition:background .12s,color .12s,transform .08s;-webkit-tap-highlight-color:transparent}
+.metronome-link:hover{background:rgba(249,115,22,.15)}
+.metronome-link:focus-visible{outline:2px solid var(--blu);outline-offset:2px}
+.metronome-link:active{background:var(--ac);color:#fff;transform:scale(.98)}
 
 /* §10 COLLAPSIBLE PANELS */
 .panel-header{display:flex;align-items:center;gap:6px;width:100%;background:none;border:0;color:inherit;text-align:left;font:inherit;cursor:pointer;user-select:none;-webkit-tap-highlight-color:transparent}
@@ -473,6 +477,7 @@ body{padding:10px 14px 20px;max-width:1280px;margin:0 auto}
       <div class="card-t">TAP BPM</div>
       <button type="button" class="tap-btn" onclick="handleTap()"><span id="tap-display">TAP</span></button>
       <div style="font-size:11px;color:var(--tx2);margin-top:5px">曲に合わせてタップでBPM測定</div>
+      <a class="metronome-link" href="https://amashimacreate.github.io/metronome/" target="_blank" rel="noopener" aria-label="メトロノームを別タブで開く">♩ メトロノームを開く</a>
     </div>
   </div>
 </div>
