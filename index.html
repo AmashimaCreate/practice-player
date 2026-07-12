@@ -61,6 +61,7 @@ body{padding:10px 14px 20px;max-width:1280px;margin:0 auto}
 .btn-bk-star:active:not(:disabled){transform:scale(.9);color:#fbbf24}
 .btn-bk-star:disabled{opacity:.3;cursor:not-allowed}
 .btn-bk-star.saved{color:#fbbf24;border-color:#fbbf24}
+.btn-share{min-width:62px}
 
 /* §3 GRID */
 .grid{display:grid;grid-template-columns:240px 1fr 320px;gap:12px;max-height:calc(100vh - 120px)}
@@ -126,6 +127,12 @@ body{padding:10px 14px 20px;max-width:1280px;margin:0 auto}
 .ab-info{font-family:var(--mono);font-size:12px;color:var(--tx2);margin-top:5px}
 .ab-info.on{color:var(--pur)}
 .ab-warn{font-size:12px;color:var(--ac2);margin-top:4px}
+.ab-adjust{display:grid;gap:5px;margin-top:8px;padding-top:8px;border-top:1px solid var(--bd)}
+.ab-adjust-row{display:grid;grid-template-columns:minmax(0,1fr) 64px 64px;align-items:center;gap:5px}
+.ab-adjust-label{font-family:var(--mono);font-size:12px;font-weight:700}
+.ab-adjust-label.a{color:var(--grn)}
+.ab-adjust-label.b{color:var(--red)}
+.ab-adjust-btn{min-height:36px;padding:7px 6px;font-family:var(--mono);font-size:12px}
 
 /* §9 TAP BPM */
 .tap-btn{width:100%;min-height:66px;font-size:22px;font-weight:700;font-family:var(--mono);border-radius:10px;background:var(--sf2);border:2px solid var(--bd);color:var(--tx);cursor:pointer;transition:all .08s;user-select:none;-webkit-tap-highlight-color:transparent}
@@ -271,6 +278,8 @@ body{padding:10px 14px 20px;max-width:1280px;margin:0 auto}
   .sec-item-del{font-size:18px;padding:6px}
   .time-r{font-size:14px}
   .ab-info,.ab-warn{font-size:13px}
+  .ab-adjust-row{grid-template-columns:minmax(0,1fr) 72px 72px}
+  .ab-adjust-btn{min-height:44px;font-size:13px}
   .tap-btn{font-size:24px;min-height:72px}
   .hi{padding:10px 8px}
   .hi-t{font-size:13px}
@@ -313,6 +322,7 @@ body{padding:10px 14px 20px;max-width:1280px;margin:0 auto}
     <button type="button" class="url-clear" id="url-clear" onclick="clearUrlInput()" title="クリア" aria-label="URLをクリア">✕</button>
   </div>
   <button type="button" id="btn-load" class="btn btn-a" disabled onclick="handleLoadClick()">読み込み</button>
+  <button type="button" id="btn-share" class="btn btn-share" disabled onclick="sharePractice()" title="現在の練習状態を共有" aria-label="動画、再生位置、A-B区間、速度を共有">共有</button>
   <button type="button" id="btn-bk-quick" class="btn-bk-star" disabled onclick="quickBookmark()" title="ブックマーク追加" aria-label="現在の状態をブックマークに追加">★</button>
 </div>
 
@@ -391,6 +401,18 @@ body{padding:10px 14px 20px;max-width:1280px;margin:0 auto}
         <button type="button" class="btn btn-s" disabled id="btn-loop" onclick="toggleLoop()" aria-keyshortcuts="L" aria-pressed="false" title="ループ切替（L）">LOOP</button>
         <button type="button" class="btn btn-s" disabled id="btn-clear-ab" onclick="clearAB()">クリア</button>
       </div>
+      <div class="ab-adjust" id="ab-adjust" hidden aria-label="A-B位置の微調整">
+        <div class="ab-adjust-row" id="ab-adjust-a" hidden>
+          <span class="ab-adjust-label a">A点</span>
+          <button type="button" class="btn btn-s ab-adjust-btn" id="btn-a-minus" onclick="nudgeLoopPoint('a',-0.1)" aria-label="A点を0.1秒前へ">−0.1秒</button>
+          <button type="button" class="btn btn-s ab-adjust-btn" id="btn-a-plus" onclick="nudgeLoopPoint('a',0.1)" aria-label="A点を0.1秒後ろへ">＋0.1秒</button>
+        </div>
+        <div class="ab-adjust-row" id="ab-adjust-b" hidden>
+          <span class="ab-adjust-label b">B点</span>
+          <button type="button" class="btn btn-s ab-adjust-btn" id="btn-b-minus" onclick="nudgeLoopPoint('b',-0.1)" aria-label="B点を0.1秒前へ">−0.1秒</button>
+          <button type="button" class="btn btn-s ab-adjust-btn" id="btn-b-plus" onclick="nudgeLoopPoint('b',0.1)" aria-label="B点を0.1秒後ろへ">＋0.1秒</button>
+        </div>
+      </div>
       <div class="ab-info" id="ab-info" style="display:none"></div>
       <div class="ab-warn" id="ab-warn" style="display:none"></div>
     </div>
@@ -451,26 +473,51 @@ body{padding:10px 14px 20px;max-width:1280px;margin:0 auto}
 /* ============================================================
    §0  UTILITIES
    ============================================================ */
-function extractVideoId(input){
+function parseTimeValue(value){
+  if(value==null)return 0;
+  var s=String(value).trim().toLowerCase();
+  if(!s)return 0;
+  if(/^\d+(?:\.\d+)?s?$/.test(s))return Math.max(0,parseFloat(s));
+  if(/^\d+:\d{1,2}(?::\d{1,2})?$/.test(s)){
+    var parts=s.split(':').map(Number),total=0;
+    for(var i=0;i<parts.length;i++)total=total*60+parts[i];
+    return Math.max(0,total);
+  }
+  var match=s.match(/^(?:(\d+)h)?(?:(\d+)m)?(?:(\d+(?:\.\d+)?)s)?$/);
+  if(!match||(match[1]==null&&match[2]==null&&match[3]==null))return 0;
+  return Math.max(0,(Number(match[1])||0)*3600+(Number(match[2])||0)*60+(Number(match[3])||0));
+}
+function extractVideoSource(input){
   if(!input||typeof input!=='string')return null;
   var s=input.trim();
-  if(/^[A-Za-z0-9_-]{11}$/.test(s))return s;
+  if(/^[A-Za-z0-9_-]{11}$/.test(s))return{id:s,start:0};
   try{
-    var u=new URL(s),h=u.hostname.replace('www.','');
-    if(h==='youtube.com'||h==='m.youtube.com'){
-      if(u.searchParams.has('v'))return u.searchParams.get('v');
+    var u=new URL(s),h=u.hostname.toLowerCase().replace(/^www\./,''),id=null;
+    if(['youtube.com','m.youtube.com','music.youtube.com','youtube-nocookie.com'].indexOf(h)!==-1){
+      if(u.searchParams.has('v'))id=u.searchParams.get('v');
       var seg=u.pathname.split('/').filter(Boolean);
-      if(['shorts','embed','live'].indexOf(seg[0])!==-1&&seg[1])return seg[1];
+      if(!id&&['shorts','embed','live'].indexOf(seg[0])!==-1&&seg[1])id=seg[1];
     }
-    if(h==='youtu.be'){var p=u.pathname.slice(1);if(p)return p.split('/')[0];}
+    if(h==='youtu.be'){var p=u.pathname.slice(1);if(p)id=p.split('/')[0];}
+    if(!/^[A-Za-z0-9_-]{11}$/.test(id||''))return null;
+    var timeRaw=u.searchParams.get('t')||u.searchParams.get('start')||u.searchParams.get('time_continue');
+    if(!timeRaw&&u.hash)timeRaw=new URLSearchParams(u.hash.slice(1)).get('t');
+    return{id:id,start:parseTimeValue(timeRaw)};
   }catch(e){}
   return null;
 }
+function extractVideoId(input){var source=extractVideoSource(input);return source?source.id:null;}
 function fmt(sec){
   if(sec==null||isNaN(sec)||sec<0)return'0:00';
   var m=Math.floor(sec/60),s=Math.floor(sec%60);
   return m+':'+(s<10?'0':'')+s;
 }
+function fmtTenths(sec){
+  if(sec==null||isNaN(sec)||sec<0)return'0:00.0';
+  var total=Math.round(sec*10),m=Math.floor(total/600),rest=total-m*600,s=Math.floor(rest/10),t=rest%10;
+  return m+':'+(s<10?'0':'')+s+'.'+t;
+}
+function compactNumber(value){return String(Math.round(Number(value)*100)/100);}
 function generateId(){return Date.now().toString(36)+Math.random().toString(36).slice(2,6);}
 /** 速度値を丸めた整数(×100)で返す。null→null。比較用共通関数。 */
 function normSpd(v){return v!=null?Math.round(v*100):null;}
@@ -490,6 +537,7 @@ var bookmarkData={folders:[],items:[]};
 try{bookmarkData=JSON.parse(localStorage.getItem('ytp_bookmarks'))||{folders:[],items:[]};}catch(e){bookmarkData={folders:[],items:[]};}
 var openFolders={};
 var tickInterval=null;
+var pendingPracticeState=null,appliedInitialPracticeState=null,sharedPracticeHandled=false;
 // v3: 編集中セクションID
 var editingSectionId=null;
 
@@ -523,8 +571,12 @@ function clearLoadMessages(){clearAllMessages();}
   eq(extractVideoId('dQw4w9WgXcQ'),'dQw4w9WgXcQ','raw');
   eq(extractVideoId('https://www.youtube.com/watch?v=dQw4w9WgXcQ'),'dQw4w9WgXcQ','watch');
   eq(extractVideoId('https://youtu.be/dQw4w9WgXcQ'),'dQw4w9WgXcQ','short');
+  eq(extractVideoSource('https://youtu.be/dQw4w9WgXcQ?t=1m23s').start,83,'timestamp');
+  eq(extractVideoSource('https://music.youtube.com/watch?v=dQw4w9WgXcQ&start=45').start,45,'music-start');
+  eq(extractVideoId('https://youtube.com/watch?v=short'),null,'invalid-id');
   eq(extractVideoId('not-a-url'),null,'invalid');
   eq(fmt(0),'0:00','f0');eq(fmt(65),'1:05','f65');
+  eq(fmtTenths(65.06),'1:05.1','f-tenth');
   var keyBase={defaultPrevented:false,isComposing:false,keyCode:0,metaKey:false,ctrlKey:false,altKey:false,shiftKey:false,target:null};
   eq(getGlobalShortcut(Object.assign({},keyBase,{code:'KeyA'})),'a','shortcut-a');
   eq(getGlobalShortcut(Object.assign({},keyBase,{code:'KeyA',metaKey:true})),null,'shortcut-meta');
@@ -550,6 +602,8 @@ function updateControlAvailability(){
   $('btn-clear-ab').disabled=!isApi;
   updateSectionSaveButton();
   updateBookmarkSaveButton();
+  updateShareButton();
+  updateABAdjustControls();
   if(controlMode==='iframe'){showInfo('この動画は簡易再生です。再生操作は動画内のボタンを使ってください。');}else{clearInfo();}
 }
 
@@ -576,6 +630,57 @@ function changeSpeed(s,opts){
 }
 function nudgeSpeed(d){changeSpeed(speed+d);}
 
+/* §6b SHARE */
+function readSharedNumber(params,name){
+  var raw=params.get(name);if(raw==null||raw==='')return null;
+  var value=Number(raw);return Number.isFinite(value)?value:null;
+}
+function readSharedPracticeState(){
+  var params=new URLSearchParams(location.search),id=params.get('video');
+  if(!/^[A-Za-z0-9_-]{11}$/.test(id||''))return null;
+  var time=readSharedNumber(params,'t'),a=readSharedNumber(params,'a'),b=readSharedNumber(params,'b'),sharedSpeed=readSharedNumber(params,'speed');
+  time=time!=null&&time>=0?time:0;
+  a=a!=null&&a>=0?a:null;
+  b=b!=null&&b>=0&&a!=null&&b-a+0.000001>=AB_MIN_INTERVAL?b:null;
+  sharedSpeed=sharedSpeed!=null&&sharedSpeed>=0.05&&sharedSpeed<=4?sharedSpeed:1;
+  return{videoId:id,time:time,pointA:a,pointB:b,speed:sharedSpeed,loop:params.get('loop')==='1',fromShare:true};
+}
+function loadSharedPractice(){
+  if(sharedPracticeHandled)return false;
+  sharedPracticeHandled=true;
+  var state=readSharedPracticeState();if(!state)return false;
+  var url='https://www.youtube.com/watch?v='+state.videoId;
+  $urlIn.value=url;updateUrlClearBtn();loadVideoByUrl(url,state);return true;
+}
+function buildPracticeShareUrl(){
+  if(!currentVideoId)return'';
+  var url=new URL('https://amashimacreate.github.io/practice-player/');
+  url.searchParams.set('video',currentVideoId);
+  if(currentTime>0)url.searchParams.set('t',compactNumber(currentTime));
+  if(pointA!=null)url.searchParams.set('a',compactNumber(pointA));
+  if(pointB!=null&&pointA!=null&&pointB-pointA+0.000001>=AB_MIN_INTERVAL)url.searchParams.set('b',compactNumber(pointB));
+  url.searchParams.set('speed',compactNumber(speed));
+  if(loopActive&&canEnableLoop())url.searchParams.set('loop','1');
+  return url.toString();
+}
+function copyShareLink(text){
+  if(navigator.clipboard&&navigator.clipboard.writeText)return navigator.clipboard.writeText(text);
+  return new Promise(function(resolve,reject){
+    var area=document.createElement('textarea');area.value=text;area.setAttribute('readonly','');area.style.cssText='position:fixed;left:-9999px;top:0';document.body.appendChild(area);area.select();
+    try{document.execCommand('copy')?resolve():reject(new Error('copy failed'));}catch(e){reject(e);}finally{area.remove();}
+  });
+}
+async function sharePractice(){
+  var url=buildPracticeShareUrl();if(!url)return;
+  if(navigator.share){
+    try{await navigator.share({title:'Practice Player',text:'この練習区間を開く',url:url});showInfo('練習リンクを共有しました');return;}
+    catch(e){if(e&&e.name==='AbortError')return;}
+  }
+  try{await copyShareLink(url);showInfo('練習リンクをコピーしました');}
+  catch(e){showError('共有リンクをコピーできませんでした');}
+}
+function updateShareButton(){var btn=$('btn-share');if(btn)btn.disabled=!(currentVideoId&&controlMode!=='none');}
+
 /* §7 YT API LOADER */
 (function(){
   debugLog('YouTube API 読み込み中…');
@@ -589,7 +694,11 @@ function nudgeSpeed(d){changeSpeed(speed+d);}
   sc.onerror=function(){if(!done){done=true;clearInterval(poll);clearTimeout(to);debugLog('YouTube API 失敗');onAPILoaded();}};
   document.head.appendChild(sc);
 })();
-function onAPILoaded(){$('btn-load').disabled=false;try{if(JSON.parse(localStorage.getItem('ytp_vid')))$('rst-bar').style.display='block';}catch(e){}}
+function onAPILoaded(){
+  $('btn-load').disabled=false;
+  if(loadSharedPractice())return;
+  try{if(JSON.parse(localStorage.getItem('ytp_vid')))$('rst-bar').style.display='block';}catch(e){}
+}
 
 /* §8 PLAYER LIFECYCLE */
 function resetPlaybackState(){currentTime=0;duration=0;isPlaying=false;$tCur.textContent='0:00';$tDur.textContent='0:00';$btnPlay.textContent='▶';$btnPlay.setAttribute('aria-label','再生');$btnPlay.classList.add('btn-a');updateSeekbar();}
@@ -598,8 +707,12 @@ function handleLoadClick(){loadVideoByUrl($urlIn.value);}
 function clearUrlInput(){$urlIn.value='';$urlIn.focus();updateUrlClearBtn();}
 function updateUrlClearBtn(){$('url-clear').classList.toggle('show',$urlIn.value.length>0);}
 
-function loadVideoByUrl(url){
-  clearLoadMessages();var id=extractVideoId(url);if(!id){showError('有効なYouTube URLを入力してください');return;}
+function loadVideoByUrl(url,initialState){
+  clearLoadMessages();var source=extractVideoSource(url);if(!source){showError('有効なYouTube URLを入力してください');return;}
+  var id=source.id;
+  appliedInitialPracticeState=null;
+  if(initialState)pendingPracticeState=Object.assign({},initialState,{videoId:id});
+  else pendingPracticeState=source.start>0?{videoId:id,time:source.start,fromTimestamp:true}:null;
   $urlIn.value=url;updateUrlClearBtn();currentUrl=url;currentVideoId=id;
   resetPlaybackState();resetLoopState();
   editingSectionId=null; // v3fix: 動画切替時に編集状態をクリア
@@ -616,11 +729,38 @@ function createPlayerAPI(id){
   try{new YT.Player('player-target',{videoId:id,playerVars:{autoplay:1,controls:1,rel:0,modestbranding:1,playsinline:1,enablejsapi:1},events:{onReady:onPlayerReady,onStateChange:onPlayerStateChange,onError:onPlayerError}});}
   catch(e){debugLog('API失敗→簡易: '+e.message);createPlayerIframe(id);}
 }
-function onPlayerReady(e){player=e.target;playerReady=true;clearError();setMode('api');try{duration=player.getDuration()||0;$tDur.textContent=fmt(duration);}catch(e){}try{player.setPlaybackRate(speed);}catch(e){}tryGetTitle();startTick();saveSession();debugLog('Player ready ✓');}
+function applyPendingPracticeState(){
+  var state=pendingPracticeState;
+  if(!state||state.videoId!==currentVideoId)return;
+  pendingPracticeState=null;
+  appliedInitialPracticeState=Object.assign({},state);
+  if(state.speed!=null)changeSpeed(state.speed,{skipSave:true});
+  var limit=duration>0?duration:Infinity;
+  pointA=state.pointA!=null?Math.max(0,Math.min(limit,state.pointA)):null;
+  pointB=state.pointB!=null?Math.max(0,Math.min(limit,state.pointB)):null;
+  if(pointA==null||pointB==null||pointB-pointA+0.000001<AB_MIN_INTERVAL)pointB=null;
+  loopActive=!!state.loop&&canEnableLoop();
+  if(state.time!=null)seekToPosition(Math.max(0,Math.min(limit,state.time)));
+  updateABUI();saveSession();
+  if(state.fromShare)showInfo('共有された練習状態を読み込みました');
+  else if(state.fromTimestamp)showInfo(fmt(state.time)+' から再生します');
+}
+function onPlayerReady(e){player=e.target;playerReady=true;clearError();setMode('api');try{duration=player.getDuration()||0;$tDur.textContent=fmt(duration);}catch(e){}try{player.setPlaybackRate(speed);}catch(e){}applyPendingPracticeState();tryGetTitle();startTick();saveSession();debugLog('Player ready ✓');}
 function onPlayerStateChange(e){if(controlMode!=='api')return;isPlaying=(e.data===YT.PlayerState.PLAYING);$btnPlay.textContent=isPlaying?'⏸':'▶';$btnPlay.setAttribute('aria-label',isPlaying?'一時停止':'再生');$btnPlay.classList.toggle('btn-a',!isPlaying);if(e.data===YT.PlayerState.PLAYING){try{var d=player.getDuration();if(d&&d!==duration){duration=d;$tDur.textContent=fmt(d);}}catch(e){}tryGetTitle();}}
 function onPlayerError(e){var c=e.data;debugLog('API error '+c);if(c===101||c===150||c===153){createPlayerIframe(currentVideoId);}else if(c===100){cleanupAfterFatalError();showError('動画が見つかりません');}else if(c===2){cleanupAfterFatalError();showError('このYouTube URLは読み込めませんでした');}else{createPlayerIframe(currentVideoId);}}
-function cleanupAfterFatalError(){destroyPlayer(true);setMode('none');$ph.style.display='flex';$title.style.display='none';resetPlaybackState();}
-function createPlayerIframe(id){destroyPlayer(true);var wrap=$('embed-wrap'),iframe=document.createElement('iframe');iframe.id='player-target';iframe.style.cssText='position:absolute;top:0;left:0;width:100%;height:100%;border:none;';iframe.setAttribute('allow','autoplay; encrypted-media; picture-in-picture');iframe.setAttribute('allowfullscreen','true');iframe.src='https://www.youtube.com/embed/'+id+'?autoplay=1&controls=1&rel=0&modestbranding=1&playsinline=1';wrap.appendChild(iframe);player=null;playerReady=false;setMode('iframe');saveSession();}
+function cleanupAfterFatalError(){pendingPracticeState=null;appliedInitialPracticeState=null;destroyPlayer(true);setMode('none');$ph.style.display='flex';$title.style.display='none';resetPlaybackState();}
+function createPlayerIframe(id){
+  var state=pendingPracticeState&&pendingPracticeState.videoId===id?pendingPracticeState:null;pendingPracticeState=null;
+  if(!state&&appliedInitialPracticeState&&appliedInitialPracticeState.videoId===id){
+    state=Object.assign({},appliedInitialPracticeState,{time:currentTime});
+  }
+  appliedInitialPracticeState=null;
+  destroyPlayer(true);var wrap=$('embed-wrap'),iframe=document.createElement('iframe');iframe.id='player-target';iframe.style.cssText='position:absolute;top:0;left:0;width:100%;height:100%;border:none;';iframe.setAttribute('allow','autoplay; encrypted-media; picture-in-picture');iframe.setAttribute('allowfullscreen','true');
+  var start=state&&state.time>0?Math.floor(state.time):0;
+  iframe.src='https://www.youtube.com/embed/'+id+'?autoplay=1&controls=1&rel=0&modestbranding=1&playsinline=1'+(start?'&start='+start:'');
+  wrap.appendChild(iframe);player=null;playerReady=false;setMode('iframe');saveSession();
+  if(state&&state.fromShare)showInfo('共有リンクを開きました。簡易再生ではA-B区間と速度は反映されません。');
+}
 function destroyPlayer(keepMode){stopTick();if(player){try{player.destroy();}catch(e){}}player=null;playerReady=false;var old=$('player-target');if(old)old.remove();$('embed-wrap').querySelectorAll('iframe').forEach(function(f){f.remove();});if(!keepMode)setMode('none');}
 function tryGetTitle(){if(!player)return;try{var d=player.getVideoData&&player.getVideoData();if(d&&d.title){$title.textContent='🎵 '+d.title;$title.title=d.title;$title.style.display='block';updateHistoryTitle(currentVideoId,d.title);}}catch(e){}}
 
@@ -638,7 +778,7 @@ function updateFlagAria(flag,point,min,max){
   flag.setAttribute('aria-valuemin',String(Math.max(0,Math.round(min*10)/10)));
   flag.setAttribute('aria-valuemax',String(Math.max(0,Math.round(max*10)/10)));
   flag.setAttribute('aria-valuenow',String(Math.max(0,Math.round(point*10)/10)));
-  flag.setAttribute('aria-valuetext',fmt(point));
+  flag.setAttribute('aria-valuetext',fmtTenths(point));
 }
 function updateSeekbar(){
   var pct=duration>0?(currentTime/duration)*100:0;
@@ -649,8 +789,8 @@ function updateSeekbar(){
   if(pointA!=null&&duration>0){$seekMA.style.left=(pointA/duration)*100+'%';$seekMA.style.display='block';}else{$seekMA.style.display='none';}
   if(pointB!=null&&duration>0){$seekMB.style.left=(pointB/duration)*100+'%';$seekMB.style.display='block';}else{$seekMB.style.display='none';}
   if(pointA!=null&&pointB!=null&&pointB>pointA&&duration>0){var a2=(pointA/duration)*100,b2=(pointB/duration)*100;$seekAB.style.left=a2+'%';$seekAB.style.width=(b2-a2)+'%';$seekAB.style.display='block';}else{$seekAB.style.display='none';}
-  if(pointA!=null&&duration>0){$flagA.style.left=(pointA/duration)*100+'%';$flagALabel.textContent='A '+fmt(pointA);updateFlagAria($flagA,pointA,0,pointB!=null?pointB-AB_MIN_INTERVAL:duration);$flagA.style.display='flex';}else{$flagA.style.display='none';}
-  if(pointB!=null&&duration>0){$flagB.style.left=(pointB/duration)*100+'%';$flagBLabel.textContent='B '+fmt(pointB);updateFlagAria($flagB,pointB,pointA!=null?pointA+AB_MIN_INTERVAL:0,duration);$flagB.style.display='flex';}else{$flagB.style.display='none';}
+  if(pointA!=null&&duration>0){$flagA.style.left=(pointA/duration)*100+'%';$flagALabel.textContent='A '+fmtTenths(pointA);updateFlagAria($flagA,pointA,0,pointB!=null?pointB-AB_MIN_INTERVAL:duration);$flagA.style.display='flex';}else{$flagA.style.display='none';}
+  if(pointB!=null&&duration>0){$flagB.style.left=(pointB/duration)*100+'%';$flagBLabel.textContent='B '+fmtTenths(pointB);updateFlagAria($flagB,pointB,pointA!=null?pointA+AB_MIN_INTERVAL:0,duration);$flagB.style.display='flex';}else{$flagB.style.display='none';}
   var stacked=false;
   if(pointA!=null&&pointB!=null&&duration>0&&$seekFlags.clientWidth>0){
     var flagGap=Math.abs(pointB-pointA)/duration*$seekFlags.clientWidth;
@@ -715,18 +855,37 @@ $flagB.addEventListener('keydown',function(e){onKey('b',e);});
 })();
 
 /* §12 AB LOOP */
-function canEnableLoop(){return pointA!=null&&pointB!=null&&pointB>pointA&&pointB-pointA>=AB_MIN_INTERVAL;}
+function canEnableLoop(){return pointA!=null&&pointB!=null&&pointB>pointA&&pointB-pointA+0.000001>=AB_MIN_INTERVAL;}
 function setPointA(){if(controlMode!=='api')return;pointA=currentTime;$abWarn.style.display='none';if(pointB!=null&&pointB<=pointA){pointB=null;loopActive=false;$abWarn.textContent='💡 A点移動のためB点クリア';$abWarn.style.display='block';}updateABUI();saveSession();}
 function setPointB(){if(controlMode!=='api')return;if(pointA==null){$abWarn.textContent='💡 先にA点を設定';$abWarn.style.display='block';return;}pointB=currentTime;$abWarn.style.display='none';if(pointB<=pointA){$abWarn.textContent='⚠ B点はA点より後に';$abWarn.style.display='block';}else if(pointB-pointA<AB_MIN_INTERVAL){$abWarn.textContent='⚠ 区間が短すぎます';$abWarn.style.display='block';}updateABUI();saveSession();}
 function clearAB(){if(controlMode!=='api')return;pointA=null;pointB=null;loopActive=false;$abWarn.style.display='none';updateABUI();saveSession();}
 function toggleLoop(){if(controlMode!=='api'||!canEnableLoop())return;loopActive=!loopActive;if(loopActive&&player&&playerReady){try{player.seekTo(pointA,true);}catch(e){}}updateABUI();saveSession();}
+function nudgeLoopPoint(which,delta){
+  if(controlMode!=='api'||!playerReady||duration<=0)return;
+  var value=which==='a'?pointA:pointB;if(value==null)return;
+  var min=which==='a'?0:(pointA!=null?pointA+AB_MIN_INTERVAL:0);
+  var max=which==='a'?(pointB!=null?pointB-AB_MIN_INTERVAL:duration):duration;
+  if(max<min)return;
+  var next=Math.round((value+delta)*10)/10;next=Math.max(min,Math.min(max,next));
+  if(which==='a')pointA=next;else pointB=next;
+  if(loopActive&&!canEnableLoop())loopActive=false;
+  updateABUI();saveSession();
+}
+function updateABAdjustControls(){
+  var hasA=pointA!=null,hasB=pointB!=null,isApi=controlMode==='api'&&playerReady,epsilon=.0001;
+  $('ab-adjust').hidden=!hasA&&!hasB;$('ab-adjust-a').hidden=!hasA;$('ab-adjust-b').hidden=!hasB;
+  $('btn-a-minus').disabled=!isApi||!hasA||pointA<=epsilon;
+  $('btn-a-plus').disabled=!isApi||!hasA||(pointB!=null?pointA>=pointB-AB_MIN_INTERVAL-epsilon:duration<=0||pointA>=duration-epsilon);
+  $('btn-b-minus').disabled=!isApi||!hasB||pointA==null||pointB<=pointA+AB_MIN_INTERVAL+epsilon;
+  $('btn-b-plus').disabled=!isApi||!hasB||duration<=0||pointB>=duration-epsilon;
+}
 function updateABUI(){
-  $btnA.textContent='A: '+(pointA!=null?fmt(pointA):'—');$btnA.style.borderColor=pointA!=null?'var(--grn)':'';$btnA.style.color=pointA!=null?'var(--grn)':'';
-  $btnB.textContent='B: '+(pointB!=null?fmt(pointB):'—');$btnB.style.borderColor=pointB!=null?'var(--red)':'';$btnB.style.color=pointB!=null?'var(--red)':'';
+  $btnA.textContent='A: '+(pointA!=null?fmtTenths(pointA):'—');$btnA.style.borderColor=pointA!=null?'var(--grn)':'';$btnA.style.color=pointA!=null?'var(--grn)':'';
+  $btnB.textContent='B: '+(pointB!=null?fmtTenths(pointB):'—');$btnB.style.borderColor=pointB!=null?'var(--red)':'';$btnB.style.color=pointB!=null?'var(--red)':'';
   var cl=canEnableLoop();$btnLoop.disabled=(controlMode!=='api')||!cl;
   $btnLoop.textContent=loopActive?'🔁 LOOP ON':'LOOP';$btnLoop.setAttribute('aria-pressed',String(loopActive));$btnLoop.classList.toggle('btn-a',loopActive);
-  if(cl){$abInfo.textContent=fmt(pointA)+' → '+fmt(pointB)+(loopActive?'  🔁 ループ中':'');$abInfo.className='ab-info'+(loopActive?' on':'');$abInfo.style.display='block';}else{$abInfo.style.display='none';}
-  updateSeekbar();updateSectionSaveButton();updateBookmarkSaveButton();
+  if(cl){$abInfo.textContent=fmtTenths(pointA)+' → '+fmtTenths(pointB)+(loopActive?'  🔁 ループ中':'');$abInfo.className='ab-info'+(loopActive?' on':'');$abInfo.style.display='block';}else{$abInfo.style.display='none';}
+  updateSeekbar();updateABAdjustControls();updateSectionSaveButton();updateBookmarkSaveButton();
 }
 
 /* §13 TAP BPM */
@@ -901,7 +1060,7 @@ function saveSection(){
   if(isDuplicateSection(pointA,pointB,parsedSpd)){showWarn('同じ区間と速度で保存済みです');return;}clearWarn();
   var label=$('sec-label').value.trim();
   var note=$('sec-note').value.trim();
-  if(!label)label=fmt(pointA)+' → '+fmt(pointB);
+  if(!label)label=fmtTenths(pointA)+' → '+fmtTenths(pointB);
   var section={
     id:generateId(),
     label:label,
@@ -1017,13 +1176,13 @@ function renderSections(){
 
     var speedDesc=s.speedPreset!=null?s.speedPreset+'倍へ変更':'速度は変更しない';
     var loadBtn=document.createElement('button');loadBtn.type='button';loadBtn.className='sec-item-load';loadBtn.disabled=isEditing;
-    loadBtn.setAttribute('aria-label','区間を読み込む: '+s.label+'、'+fmt(s.pointA)+'から'+fmt(s.pointB)+'、'+speedDesc);
+    loadBtn.setAttribute('aria-label','区間を読み込む: '+s.label+'、'+fmtTenths(s.pointA)+'から'+fmtTenths(s.pointB)+'、'+speedDesc);
     loadBtn.onclick=function(e){e.stopPropagation();loadSection(s);};
     var lbl=document.createElement('div');lbl.className='sec-item-label';lbl.textContent=s.label;
     loadBtn.appendChild(lbl);
 
     var time=document.createElement('div');time.className='sec-item-time';
-    time.textContent=fmt(s.pointA)+' → '+fmt(s.pointB);
+    time.textContent=fmtTenths(s.pointA)+' → '+fmtTenths(s.pointB);
     loadBtn.appendChild(time);top.appendChild(loadBtn);
 
     // Edit button
@@ -1126,7 +1285,7 @@ function createBookmarkItemEl(bk){
   var item=document.createElement('div');item.className='bk-item';
   var body=document.createElement('button');body.type='button';body.className='bk-item-load';body.setAttribute('aria-label','ブックマークを読み込む: '+bk.title);body.onclick=function(){loadBookmark(bk);};
   var t=document.createElement('div');t.className='bk-item-title';t.textContent=bk.title;
-  var m=document.createElement('div');m.className='bk-item-meta';var p=[];if(bk.speed&&bk.speed!==1)p.push(bk.speed+'x');if(bk.pointA!=null&&bk.pointB!=null)p.push(fmt(bk.pointA)+'→'+fmt(bk.pointB));m.textContent=p.join(' ')||bk.videoId;
+  var m=document.createElement('div');m.className='bk-item-meta';var p=[];if(bk.speed&&bk.speed!==1)p.push(bk.speed+'x');if(bk.pointA!=null&&bk.pointB!=null)p.push(fmtTenths(bk.pointA)+'→'+fmtTenths(bk.pointB));m.textContent=p.join(' ')||bk.videoId;
   body.appendChild(t);body.appendChild(m);
   var act=document.createElement('div');act.className='bk-item-actions';if(bookmarkData.folders.length>0)act.appendChild(createFolderMoveSelect(bk));
   var del=document.createElement('button');del.type='button';del.className='bk-item-del';del.textContent='✕';del.setAttribute('aria-label','ブックマークを削除: '+bk.title);del.onclick=function(){deleteBookmark(bk.id);};
