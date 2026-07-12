@@ -8,8 +8,14 @@
 <meta name="theme-color" content="#101012">
 <meta name="color-scheme" content="dark">
 <meta name="application-name" content="Practice Player">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Practice Player">
 <link rel="canonical" href="https://amashimacreate.github.io/practice-player/">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="manifest" href="manifest.webmanifest">
 <meta property="og:type" content="website">
 <meta property="og:locale" content="ja_JP">
 <meta property="og:site_name" content="Practice Player">
@@ -61,7 +67,7 @@ body{padding:10px 14px 20px;max-width:1280px;margin:0 auto}
 .btn-bk-star:active:not(:disabled){transform:scale(.9);color:#fbbf24}
 .btn-bk-star:disabled{opacity:.3;cursor:not-allowed}
 .btn-bk-star.saved{color:#fbbf24;border-color:#fbbf24}
-.btn-share{min-width:62px}
+.btn-copy-url{min-width:82px}
 
 /* §3 GRID */
 .grid{display:grid;grid-template-columns:240px 1fr 320px;gap:12px;max-height:calc(100vh - 120px)}
@@ -324,7 +330,7 @@ body{padding:10px 14px 20px;max-width:1280px;margin:0 auto}
     <button type="button" class="url-clear" id="url-clear" onclick="clearUrlInput()" title="クリア" aria-label="URLをクリア">✕</button>
   </div>
   <button type="button" id="btn-load" class="btn btn-a" disabled onclick="handleLoadClick()">読み込み</button>
-  <button type="button" id="btn-share" class="btn btn-share" disabled onclick="sharePractice()" title="現在の練習状態を共有" aria-label="動画、再生位置、A-B区間、速度を共有">共有</button>
+  <button type="button" id="btn-copy-url" class="btn btn-copy-url" disabled onclick="copyPracticeUrl()" title="現在の練習状態のURLをコピー" aria-label="動画、再生位置、A-B区間、速度を含むURLをコピー">URLコピー</button>
   <button type="button" id="btn-bk-quick" class="btn-bk-star" disabled onclick="quickBookmark()" title="ブックマーク追加" aria-label="現在の状態をブックマークに追加">★</button>
 </div>
 
@@ -604,7 +610,7 @@ function updateControlAvailability(){
   $('btn-clear-ab').disabled=!isApi;
   updateSectionSaveButton();
   updateBookmarkSaveButton();
-  updateShareButton();
+  updateCopyUrlButton();
   updateABAdjustControls();
   if(controlMode==='iframe'){showInfo('この動画は簡易再生です。再生操作は動画内のボタンを使ってください。');}else{clearInfo();}
 }
@@ -666,22 +672,20 @@ function buildPracticeShareUrl(){
   return url.toString();
 }
 function copyShareLink(text){
-  if(navigator.clipboard&&navigator.clipboard.writeText)return navigator.clipboard.writeText(text);
   return new Promise(function(resolve,reject){
     var area=document.createElement('textarea');area.value=text;area.setAttribute('readonly','');area.style.cssText='position:fixed;left:-9999px;top:0';document.body.appendChild(area);area.select();
-    try{document.execCommand('copy')?resolve():reject(new Error('copy failed'));}catch(e){reject(e);}finally{area.remove();}
+    var copied=false;try{copied=document.execCommand('copy');}catch(e){}area.remove();
+    if(copied){resolve();return;}
+    if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(text).then(resolve,reject);return;}
+    reject(new Error('copy failed'));
   });
 }
-async function sharePractice(){
+async function copyPracticeUrl(){
   var url=buildPracticeShareUrl();if(!url)return;
-  if(navigator.share){
-    try{await navigator.share({title:'Practice Player',text:'この練習区間を開く',url:url});showInfo('練習リンクを共有しました');return;}
-    catch(e){if(e&&e.name==='AbortError')return;}
-  }
-  try{await copyShareLink(url);showInfo('練習リンクをコピーしました');}
-  catch(e){showError('共有リンクをコピーできませんでした');}
+  try{await copyShareLink(url);showInfo('練習状態のURLをコピーしました');}
+  catch(e){showError('URLをコピーできませんでした');}
 }
-function updateShareButton(){var btn=$('btn-share');if(btn)btn.disabled=!(currentVideoId&&controlMode!=='none');}
+function updateCopyUrlButton(){var btn=$('btn-copy-url');if(btn)btn.disabled=!(currentVideoId&&controlMode!=='none');}
 
 /* §7 YT API LOADER */
 (function(){
@@ -1338,6 +1342,11 @@ $urlIn.addEventListener('keydown',function(e){if(e.key==='Enter')handleLoadClick
 $urlIn.addEventListener('input',updateUrlClearBtn);
 
 /* §19 INIT */
+if('serviceWorker'in navigator){
+  window.addEventListener('load',function(){
+    navigator.serviceWorker.register('./service-worker.js').catch(function(e){console.warn('Service Worker registration failed',e);});
+  });
+}
 debugLog('起動完了 — URLを貼り付けて再生');
 </script>
 </body>

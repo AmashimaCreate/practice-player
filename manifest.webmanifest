@@ -1,0 +1,34 @@
+{
+  "id": "./",
+  "name": "Practice Player",
+  "short_name": "Practice",
+  "description": "YouTube動画の区間リピート、速度調整、ブックマーク、練習区間の保存に対応したギター練習用プレーヤー。",
+  "lang": "ja",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#101012",
+  "theme_color": "#101012",
+  "orientation": "any",
+  "categories": ["music", "education", "utilities"],
+  "icons": [
+    {
+      "src": "favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
