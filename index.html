@@ -82,6 +82,9 @@ body{padding:10px 14px 20px;max-width:1280px;margin:0 auto}
 .seek-flag.dragging{cursor:grabbing;transition:none;z-index:5}
 .seek-flag-pole{width:2px;height:8px;border-radius:1px}
 .seek-flag-label{font-family:var(--mono);font-size:11px;font-weight:700;padding:2px 6px;border-radius:3px;white-space:nowrap;line-height:1.2;user-select:none}
+.seek-flags.stacked{height:54px}
+.seek-flags.stacked .seek-flag-b{top:24px}
+.seek-flags.stacked .seek-flag-b::before{content:"";position:absolute;top:-24px;left:50%;width:2px;height:24px;transform:translateX(-50%);background:var(--red);border-radius:1px}
 .seek-flag-a .seek-flag-pole{background:var(--grn)}
 .seek-flag-a .seek-flag-label{background:rgba(52,211,153,.15);color:var(--grn);border:1px solid rgba(52,211,153,.35)}
 .seek-flag-b .seek-flag-pole{background:var(--red)}
@@ -460,7 +463,7 @@ var $seekMA=$('seek-ma'),$seekMB=$('seek-mb'),$seekTh=$('seek-th');
 var $tCur=$('t-cur'),$tDur=$('t-dur');
 var $btnPlay=$('btn-play'),$btnA=$('btn-a'),$btnB=$('btn-b'),$btnLoop=$('btn-loop');
 var $abInfo=$('ab-info'),$abWarn=$('ab-warn'),$badge=$('mode-badge');
-var $flagA=$('flag-a'),$flagALabel=$('flag-a-label'),$flagB=$('flag-b'),$flagBLabel=$('flag-b-label');
+var $seekFlags=$('seek-flags'),$flagA=$('flag-a'),$flagALabel=$('flag-a-label'),$flagB=$('flag-b'),$flagBLabel=$('flag-b-label');
 
 /* §4 MESSAGES */
 function showError(m){$err.textContent=m;$err.style.display='block';}
@@ -577,6 +580,13 @@ function tryGetTitle(){if(!player)return;try{var d=player.getVideoData&&player.g
 /* §9 TICK */
 function startTick(){stopTick();tickInterval=setInterval(function(){if(controlMode!=='api'||!player||!playerReady)return;try{currentTime=player.getCurrentTime();var d=player.getDuration();if(d&&d!==duration){duration=d;$tDur.textContent=fmt(d);}updateSeekbar();if(loopActive&&pointA!=null&&pointB!=null&&pointB>pointA&&currentTime>=pointB){player.seekTo(pointA,true);}}catch(e){}},200);}
 function stopTick(){if(tickInterval){clearInterval(tickInterval);tickInterval=null;}}
+function clampSeekFlagLabel(label,point){
+  if(point==null||duration<=0||$seekFlags.clientWidth<=0){label.style.transform='';return;}
+  var center=point/duration*$seekFlags.clientWidth,half=label.offsetWidth/2,shift=0;
+  if(center<half)shift=half-center;
+  else if(center>$seekFlags.clientWidth-half)shift=$seekFlags.clientWidth-half-center;
+  label.style.transform=shift?'translateX('+shift+'px)':'';
+}
 function updateSeekbar(){
   var pct=duration>0?(currentTime/duration)*100:0;
   $seekF.style.width=pct+'%';$seekTh.style.left=pct+'%';$tCur.textContent=fmt(currentTime);
@@ -585,6 +595,15 @@ function updateSeekbar(){
   if(pointA!=null&&pointB!=null&&pointB>pointA&&duration>0){var a2=(pointA/duration)*100,b2=(pointB/duration)*100;$seekAB.style.left=a2+'%';$seekAB.style.width=(b2-a2)+'%';$seekAB.style.display='block';}else{$seekAB.style.display='none';}
   if(pointA!=null&&duration>0){$flagA.style.left=(pointA/duration)*100+'%';$flagALabel.textContent='A '+fmt(pointA);$flagA.style.display='flex';}else{$flagA.style.display='none';}
   if(pointB!=null&&duration>0){$flagB.style.left=(pointB/duration)*100+'%';$flagBLabel.textContent='B '+fmt(pointB);$flagB.style.display='flex';}else{$flagB.style.display='none';}
+  var stacked=false;
+  if(pointA!=null&&pointB!=null&&duration>0&&$seekFlags.clientWidth>0){
+    var flagGap=Math.abs(pointB-pointA)/duration*$seekFlags.clientWidth;
+    var labelGap=($flagALabel.offsetWidth+$flagBLabel.offsetWidth)/2+6;
+    stacked=flagGap<labelGap;
+  }
+  $seekFlags.classList.toggle('stacked',stacked);
+  clampSeekFlagLabel($flagALabel,pointA);
+  clampSeekFlagLabel($flagBLabel,pointB);
 }
 
 /* §10 TRANSPORT */
