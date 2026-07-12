@@ -734,10 +734,21 @@ function handleTap(){var now=performance.now();if(tapTimes.length>0&&now-tapTime
 function resetTap(){tapTimes=[];bpmValue=null;clearTimeout(tapResetTimer);$('tap-display').textContent='TAP';}
 
 /* §14 HISTORY */
-function addToHistory(url,id){videoHistory=videoHistory.filter(function(h){return h.url!==url;});videoHistory.unshift({url:url,id:id,title:'',lastPos:0});if(videoHistory.length>8)videoHistory=videoHistory.slice(0,8);saveHistory();renderHistory();}
+function addToHistory(url,id){
+  var previous=videoHistory.find(function(h){return h.id===id;});
+  videoHistory=videoHistory.filter(function(h){return h.id!==id;});
+  videoHistory.unshift({
+    url:url,
+    id:id,
+    title:previous&&previous.title?previous.title:'',
+    lastPos:previous&&Number.isFinite(Number(previous.lastPos))?Math.max(0,Number(previous.lastPos)):0
+  });
+  if(videoHistory.length>8)videoHistory=videoHistory.slice(0,8);
+  saveHistory();renderHistory();
+}
 function updateHistoryTitle(id,t){videoHistory.forEach(function(h){if(h.id===id)h.title=t;});saveHistory();renderHistory();}
 function updateHistoryPosition(id,pos){videoHistory.forEach(function(h){if(h.id===id)h.lastPos=pos;});saveHistory();}
-function deleteHistoryItem(url){videoHistory=videoHistory.filter(function(h){return h.url!==url;});saveHistory();renderHistory();}
+function deleteHistoryItem(id){videoHistory=videoHistory.filter(function(h){return h.id!==id;});saveHistory();renderHistory();}
 function saveHistory(){try{localStorage.setItem('ytp_hist',JSON.stringify(videoHistory));}catch(e){}}
 var historyOpen=false;
 function toggleHistoryPanel(){
@@ -753,17 +764,36 @@ function toggleBkPanel(){
   $('bk-arrow').classList.toggle('open',bkOpen);
   $('bk-panel-toggle').setAttribute('aria-expanded',String(bkOpen));
 }
+function loadHistoryItem(h){
+  var resumeAt=Math.max(0,Number(h.lastPos)||0);
+  var resumeVideoId=h.id;
+  $urlIn.value=h.url;loadVideoByUrl(h.url);
+  if(!resumeAt)return;
+  var attempts=0;
+  var resumeTimer=setInterval(function(){
+    attempts++;
+    if(currentVideoId!==resumeVideoId){
+      clearInterval(resumeTimer);
+    }else if(controlMode==='api'&&playerReady&&player){
+      var target=duration>0?Math.min(resumeAt,duration):resumeAt;
+      seekToPosition(target);showInfo(fmt(target)+' から再開しました');clearInterval(resumeTimer);
+    }else if(controlMode==='iframe'||attempts>40){
+      clearInterval(resumeTimer);
+    }
+  },300);
+}
 function renderHistory(){
   var $l=$('hist-list');var $cnt=$('hist-count');
   if($cnt)$cnt.textContent=videoHistory.length?videoHistory.length+'件':'';
   if(!videoHistory.length){$l.innerHTML='<div class="empty-state"><div class="empty-state-text">履歴なし</div></div>';return;}
   $l.innerHTML='';videoHistory.forEach(function(h){
     var name=h.title||h.url||h.id;
+    var resumeText=h.lastPos>0?'、'+fmt(h.lastPos)+'から再開':'';
     var item=document.createElement('div');item.className='hi';
-    var open=document.createElement('button');open.type='button';open.className='hi-open';open.setAttribute('aria-label','履歴を読み込む: '+name);
-    open.onclick=function(){$urlIn.value=h.url;loadVideoByUrl(h.url);};
+    var open=document.createElement('button');open.type='button';open.className='hi-open';open.setAttribute('aria-label','履歴から開く: '+name+resumeText);
+    open.onclick=function(){loadHistoryItem(h);};
     var txt=document.createElement('div');txt.className='hi-t';txt.textContent=name+(h.lastPos>0?' ('+fmt(h.lastPos)+')':'');open.appendChild(txt);
-    var del=document.createElement('button');del.type='button';del.className='hi-d';del.textContent='✕';del.setAttribute('aria-label','履歴から削除: '+name);del.onclick=function(){deleteHistoryItem(h.url);};
+    var del=document.createElement('button');del.type='button';del.className='hi-d';del.textContent='✕';del.setAttribute('aria-label','履歴から削除: '+name);del.onclick=function(){deleteHistoryItem(h.id);};
     item.appendChild(open);item.appendChild(del);$l.appendChild(item);
   });
 }
