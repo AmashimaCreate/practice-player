@@ -1,4 +1,4 @@
-const CACHE_NAME = 'practice-player-v3';
+const CACHE_NAME = 'practice-player-v4';
 const APP_SHELL = [
   './',
   './index.html',

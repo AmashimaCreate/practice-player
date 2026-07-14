@@ -153,6 +153,9 @@ body{padding:10px 14px 20px;max-width:1280px;margin:0 auto}
 .panel-header:hover .panel-arrow{color:var(--ac)}
 .panel-arrow{font-size:11px;color:var(--tx2);transition:transform .15s;width:14px;text-align:center}
 .panel-arrow.open{transform:rotate(90deg)}
+.card-collapse-header{margin-bottom:8px}
+.card-collapse-header[aria-expanded="false"]{margin-bottom:0}
+.card-collapse-header .card-t{margin-bottom:0}
 .panel-card{background:var(--sf);border:1px solid var(--bd);border-radius:10px;padding:10px 12px}
 .hl{display:flex;flex-direction:column;gap:3px;max-height:160px;overflow-y:auto;margin-top:6px}
 .hi{display:flex;align-items:center;gap:6px;padding:8px 8px;background:var(--sf2);border-radius:5px;transition:background .1s}
@@ -406,51 +409,61 @@ body{padding:10px 14px 20px;max-width:1280px;margin:0 auto}
   <!-- RIGHT -->
   <div class="stack col-scroll practice-column">
     <div class="card" id="card-ab">
-      <div class="card-t">A-B ループ</div>
-      <div class="row rowc">
-        <button type="button" class="btn btn-s" disabled id="btn-a" onclick="setPointA()" aria-keyshortcuts="A" title="A点を設定（A）">A: —</button>
-        <button type="button" class="btn btn-s" disabled id="btn-b" onclick="setPointB()" aria-keyshortcuts="B" title="B点を設定（B）">B: —</button>
-        <button type="button" class="btn btn-s" disabled id="btn-loop" onclick="toggleLoop()" aria-keyshortcuts="L" aria-pressed="false" title="ループ切替（L）">LOOP</button>
-        <button type="button" class="btn btn-s" disabled id="btn-clear-ab" onclick="clearAB()">クリア</button>
-      </div>
-      <div class="ab-adjust" id="ab-adjust" hidden aria-label="A-B位置の微調整">
-        <div class="ab-adjust-row" id="ab-adjust-a" hidden>
-          <span class="ab-adjust-label a">A点</span>
-          <button type="button" class="btn btn-s ab-adjust-btn" id="btn-a-minus" onclick="nudgeLoopPoint('a',-0.1)" aria-label="A点を0.1秒前へ">−0.1秒</button>
-          <button type="button" class="btn btn-s ab-adjust-btn" id="btn-a-plus" onclick="nudgeLoopPoint('a',0.1)" aria-label="A点を0.1秒後ろへ">＋0.1秒</button>
+      <button type="button" class="panel-header card-collapse-header" id="ab-panel-toggle" onclick="togglePracticePanel('ab')" aria-expanded="true" aria-controls="ab-panel-body">
+        <span class="panel-arrow open" id="ab-panel-arrow" aria-hidden="true">▶</span>
+        <span class="card-t">A-B ループ</span>
+      </button>
+      <div id="ab-panel-body">
+        <div class="row rowc">
+          <button type="button" class="btn btn-s" disabled id="btn-a" onclick="setPointA()" aria-keyshortcuts="A" title="A点を設定（A）">A: —</button>
+          <button type="button" class="btn btn-s" disabled id="btn-b" onclick="setPointB()" aria-keyshortcuts="B" title="B点を設定（B）">B: —</button>
+          <button type="button" class="btn btn-s" disabled id="btn-loop" onclick="toggleLoop()" aria-keyshortcuts="L" aria-pressed="false" title="ループ切替（L）">LOOP</button>
+          <button type="button" class="btn btn-s" disabled id="btn-clear-ab" onclick="clearAB()">クリア</button>
         </div>
-        <div class="ab-adjust-row" id="ab-adjust-b" hidden>
-          <span class="ab-adjust-label b">B点</span>
-          <button type="button" class="btn btn-s ab-adjust-btn" id="btn-b-minus" onclick="nudgeLoopPoint('b',-0.1)" aria-label="B点を0.1秒前へ">−0.1秒</button>
-          <button type="button" class="btn btn-s ab-adjust-btn" id="btn-b-plus" onclick="nudgeLoopPoint('b',0.1)" aria-label="B点を0.1秒後ろへ">＋0.1秒</button>
+        <div class="ab-adjust" id="ab-adjust" hidden aria-label="A-B位置の微調整">
+          <div class="ab-adjust-row" id="ab-adjust-a" hidden>
+            <span class="ab-adjust-label a">A点</span>
+            <button type="button" class="btn btn-s ab-adjust-btn" id="btn-a-minus" onclick="nudgeLoopPoint('a',-0.1)" aria-label="A点を0.1秒前へ">−0.1秒</button>
+            <button type="button" class="btn btn-s ab-adjust-btn" id="btn-a-plus" onclick="nudgeLoopPoint('a',0.1)" aria-label="A点を0.1秒後ろへ">＋0.1秒</button>
+          </div>
+          <div class="ab-adjust-row" id="ab-adjust-b" hidden>
+            <span class="ab-adjust-label b">B点</span>
+            <button type="button" class="btn btn-s ab-adjust-btn" id="btn-b-minus" onclick="nudgeLoopPoint('b',-0.1)" aria-label="B点を0.1秒前へ">−0.1秒</button>
+            <button type="button" class="btn btn-s ab-adjust-btn" id="btn-b-plus" onclick="nudgeLoopPoint('b',0.1)" aria-label="B点を0.1秒後ろへ">＋0.1秒</button>
+          </div>
         </div>
+        <div class="ab-info" id="ab-info" style="display:none"></div>
+        <div class="ab-warn" id="ab-warn" style="display:none"></div>
       </div>
-      <div class="ab-info" id="ab-info" style="display:none"></div>
-      <div class="ab-warn" id="ab-warn" style="display:none"></div>
     </div>
 
     <!-- v3: Section Save -->
     <div class="card" id="card-sec-save">
-      <div class="card-t">区間を保存</div>
-      <input type="text" class="sec-input" id="sec-label" placeholder="区間名（例: イントロ）" maxlength="40" style="width:100%;margin-bottom:6px">
-      <textarea class="sec-textarea" id="sec-note" placeholder="メモ（任意）" maxlength="200" rows="1"></textarea>
-      <div class="sec-spd-head">
-        <span class="sec-spd-label" id="sec-spd-label">読み込み時の速度</span>
-        <div class="sec-spd-actions" role="group" aria-labelledby="sec-spd-label">
-          <button type="button" class="sec-spd-mode-btn" id="sec-spd-current" onclick="secSpdSetCurrent()" title="現在の再生速度を使用">現在速度</button>
-          <button type="button" class="sec-spd-mode-btn" id="sec-spd-none" onclick="secSpdSetNone()" aria-pressed="false">指定なし</button>
+      <button type="button" class="panel-header card-collapse-header" id="section-save-panel-toggle" onclick="togglePracticePanel('sectionSave')" aria-expanded="true" aria-controls="section-save-panel-body">
+        <span class="panel-arrow open" id="section-save-panel-arrow" aria-hidden="true">▶</span>
+        <span class="card-t">区間を保存</span>
+      </button>
+      <div id="section-save-panel-body">
+        <input type="text" class="sec-input" id="sec-label" placeholder="区間名（例: イントロ）" maxlength="40" style="width:100%;margin-bottom:6px">
+        <textarea class="sec-textarea" id="sec-note" placeholder="メモ（任意）" maxlength="200" rows="1"></textarea>
+        <div class="sec-spd-head">
+          <span class="sec-spd-label" id="sec-spd-label">読み込み時の速度</span>
+          <div class="sec-spd-actions" role="group" aria-labelledby="sec-spd-label">
+            <button type="button" class="sec-spd-mode-btn" id="sec-spd-current" onclick="secSpdSetCurrent()" title="現在の再生速度を使用">現在速度</button>
+            <button type="button" class="sec-spd-mode-btn" id="sec-spd-none" onclick="secSpdSetNone()" aria-pressed="false">指定なし</button>
+          </div>
         </div>
-      </div>
-      <div class="sec-spd-bar" id="sec-spd-controls">
-        <button type="button" class="sec-spd-nudge" onclick="secSpdNudge(-0.1)" aria-label="読み込み時の速度を0.1下げる">−.1</button>
-        <button type="button" class="sec-spd-nudge" onclick="secSpdNudge(-0.05)" aria-label="読み込み時の速度を0.05下げる">−.05</button>
-        <output class="sec-spd-display" id="sec-spd-display" aria-live="polite">1x</output>
-        <button type="button" class="sec-spd-nudge" onclick="secSpdNudge(0.05)" aria-label="読み込み時の速度を0.05上げる">+.05</button>
-        <button type="button" class="sec-spd-nudge" onclick="secSpdNudge(0.1)" aria-label="読み込み時の速度を0.1上げる">+.1</button>
-      </div>
-      <input type="hidden" id="sec-speed-preset" value="">
-      <div style="display:flex;justify-content:center;margin-top:6px">
-        <button type="button" class="btn btn-s btn-a" id="btn-sec-save" disabled onclick="saveSection()">💾 区間を保存</button>
+        <div class="sec-spd-bar" id="sec-spd-controls">
+          <button type="button" class="sec-spd-nudge" onclick="secSpdNudge(-0.1)" aria-label="読み込み時の速度を0.1下げる">−.1</button>
+          <button type="button" class="sec-spd-nudge" onclick="secSpdNudge(-0.05)" aria-label="読み込み時の速度を0.05下げる">−.05</button>
+          <output class="sec-spd-display" id="sec-spd-display" aria-live="polite">1x</output>
+          <button type="button" class="sec-spd-nudge" onclick="secSpdNudge(0.05)" aria-label="読み込み時の速度を0.05上げる">+.05</button>
+          <button type="button" class="sec-spd-nudge" onclick="secSpdNudge(0.1)" aria-label="読み込み時の速度を0.1上げる">+.1</button>
+        </div>
+        <input type="hidden" id="sec-speed-preset" value="">
+        <div style="display:flex;justify-content:center;margin-top:6px">
+          <button type="button" class="btn btn-s btn-a" id="btn-sec-save" disabled onclick="saveSection()">💾 区間を保存</button>
+        </div>
       </div>
     </div>
 
@@ -934,6 +947,42 @@ function toggleBkPanel(){
   $('bk-arrow').classList.toggle('open',bkOpen);
   $('bk-panel-toggle').setAttribute('aria-expanded',String(bkOpen));
 }
+var PRACTICE_PANEL_STATE_KEY='pp_practice_panels_v1';
+var practicePanelState={ab:true,sectionSave:true};
+var practicePanelConfig={
+  ab:{body:'ab-panel-body',arrow:'ab-panel-arrow',toggle:'ab-panel-toggle'},
+  sectionSave:{body:'section-save-panel-body',arrow:'section-save-panel-arrow',toggle:'section-save-panel-toggle'}
+};
+function loadPracticePanelState(){
+  try{
+    var saved=JSON.parse(localStorage.getItem(PRACTICE_PANEL_STATE_KEY)||'{}');
+    Object.keys(practicePanelState).forEach(function(name){
+      if(typeof saved[name]==='boolean')practicePanelState[name]=saved[name];
+    });
+  }catch(e){}
+}
+function savePracticePanelState(){
+  try{localStorage.setItem(PRACTICE_PANEL_STATE_KEY,JSON.stringify(practicePanelState));}catch(e){}
+}
+function applyPracticePanelState(name){
+  var config=practicePanelConfig[name];
+  if(!config)return;
+  var open=practicePanelState[name];
+  $(config.body).hidden=!open;
+  $(config.arrow).classList.toggle('open',open);
+  $(config.toggle).setAttribute('aria-expanded',String(open));
+}
+function togglePracticePanel(name){
+  if(!practicePanelConfig[name])return;
+  practicePanelState[name]=!practicePanelState[name];
+  applyPracticePanelState(name);
+  savePracticePanelState();
+}
+function initPracticePanels(){
+  loadPracticePanelState();
+  Object.keys(practicePanelState).forEach(applyPracticePanelState);
+}
+initPracticePanels();
 function loadHistoryItem(h){
   var resumeAt=Math.max(0,Number(h.lastPos)||0);
   var resumeVideoId=h.id;
